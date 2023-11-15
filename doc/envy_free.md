@@ -1,7 +1,11 @@
 # Envy-Freeness:
 Envy freeness is given if the Value function $V_i$ for every agent i is resulting the highest result with their given ressources when compared to every other agents ressources. 
 
-$X_i \succeq_i X_j \leftrightarrow V_i(X_i) \geq V_i(X_j)$
+According to a valuation function:
+$X \succeq_i Y \leftrightarrow V_i(X) \geq V_i(Y)$
+
+Envy-freeness is defined as : There are no agents $i$ and $j$ such that
+$V_i(X_i) < V_i(X_j)$
 
 Therefore the best solution is calculated and afterwards the envy freeness is calculated
 
@@ -21,3 +25,6 @@ preferences of constraints
 Afterwards envy-freeness is calculated and returns if a fair solution is possible and which solutions.
 
 --> value to be optimized is combination of envy-freeness and utility
+
+# Grant Proposal
+https://research.google/outreach/research-scholar-program/
