@@ -2,33 +2,108 @@
 
 enum Days = {Mon, Tue, Wed, Thu, Fri};
 enum Tables = {NoTable, Table1, Table2};
+
+array[Days] of var Tables: assigned_agent1;
+int: nSoftConstraints = 3;
+set of int: SoftConstraints_agent1 = 1..nSoftConstraints;
+array[SoftConstraints_agent1] of var bool: satisfied_agent1;
+
+%overall constraint: no table can be assigned to 2 agents; exception: both can get NoTable
+constraint forall (d in Days) ((assigned_agent1[d]!=assigned_agent2[d]) \/ (assigned_agent1[d] == NoTable));
+
 % preferences 1 :
 % 1: will Dienstag haben, 
 % 2: will zwei Tage haben, 
 % 3: will einen Tag Pause dazwischen
 
-array[Days] of var Tables: assigned;
-int: nSoftConstraints = 3;
-set of int: SoftConstraints = 1..nSoftConstraints;
-array[SoftConstraints] of var bool: satisfied;
 
 % 1: will Dienstag haben
-constraint satisfied[1] == (assigned[Tue] != NoTable);
+constraint satisfied_agent1[1] == (assigned_agent1[Tue] != NoTable);
 
 % 2: will zwei Tage haben, 
-constraint satisfied[2] == (sum(d in Days) (
-                               bool2int(assigned[d] != NoTable)) == 2);
+constraint satisfied_agent1[2] == (sum(d in Days) (
+                               bool2int(assigned_agent1[d] != NoTable)) == 2);
 
 % 3: will einen Tag Pause dazwischen (keine zwei aufeinanderfolgenden Tage)                              
-constraint satisfied[3] == (not (exists(d in Days diff {Fri}) ( 
-                  (assigned[d] != NoTable) /\
-                  (assigned[enum_next(Days, d)] != NoTable)
+constraint satisfied_agent1[3] == (not (exists(d in Days diff {Fri}) ( 
+                  (assigned_agent1[d] != NoTable) /\
+                  (assigned_agent1[enum_next(Days, d)] != NoTable)
 )));
 
-var int: overall_utility;
-array[SoftConstraints] of int: utils = [3, 2, 1];
-constraint overall_utility = sum(s in SoftConstraints) (
-                                 utils[s] * bool2int(satisfied[s])
-);
+%calculate satisfied array for ressources of agent2
+array[1..3] of var bool: satisfied_envy_agent1 = array1d([(assigned_agent2[Tue] != NoTable), (sum(d in Days) (
+                               bool2int(assigned_agent2[d] != NoTable)) == 2), (not (exists(d in Days diff {Fri}) ( 
+                  (assigned_agent2[d] != NoTable) /\
+                  (assigned_agent2[enum_next(Days, d)] != NoTable))))]);
 
-solve maximize overall_utility; 
+%AGENT2
+% preferences 1 :
+% 1: will Donnerstag haben, 
+% 2: will drei Tage haben, 
+% 3: will min. einen Tag gemeinsam mit Agent1
+
+array[Days] of var Tables: assigned_agent2;
+int: nSoftConstraints_agent2 = 3;
+set of int: SoftConstraints_agent2 = 1..nSoftConstraints_agent2;
+array[SoftConstraints_agent2] of var bool: satisfied_agent2;
+
+% 1: will Donnerstag haben
+constraint satisfied_agent2[1] == (assigned_agent2[Thu] != NoTable);
+
+% 2: will drei Tage haben, 
+constraint satisfied_agent2[2] == (sum(d in Days) (
+                               bool2int(assigned_agent2[d] != NoTable)) == 3);
+
+% 3: will min. einen Tag gemeinsam mit Agent1                              
+constraint satisfied_agent2[3] == (exists(d in Days) ( 
+                  (assigned_agent2[d] != NoTable) /\
+                  (assigned_agent1[d] != NoTable)
+));
+
+%calculate satisfied array for ressources of agent1
+
+array[1..3] of var bool: satisfied_envy_agent2 = array1d([(assigned_agent1[Thu] != NoTable), (sum(d in Days) (
+                               bool2int(assigned_agent1[d] != NoTable)) == 3),(exists(d in Days) ( 
+                  (assigned_agent1[d] != NoTable) /\
+                  (assigned_agent1[d] != NoTable)
+))]);
+
+%CALCULATE UTILITY
+
+var int: overall_utility;
+array[SoftConstraints_agent2] of int: utils_agent2 = [3, 2, 1];
+array[SoftConstraints_agent1] of int: utils_agent1 = [3, 2, 1];
+
+                                 
+           
+                                                                                      
+                                                                                                                                                                                                                                               
+
+                                
+var bool: envy_free_agent1 = sum(s in SoftConstraints_agent1)(utils_agent1[s] * bool2int(satisfied_agent1[s]))>=
+                      sum(s in SoftConstraints_agent1)(utils_agent1[s] * bool2int(satisfied_envy_agent1[s]));
+                      
+var bool: envy_free_agent2 = sum(s in SoftConstraints_agent2)(utils_agent2[s] * bool2int(satisfied_agent2[s]))>=
+                              sum(s in SoftConstraints_agent2)(utils_agent2[s] * bool2int(satisfied_envy_agent2[s]));
+                              
+var bool: envy_free = envy_free_agent1 /\ envy_free_agent2;
+
+constraint overall_utility = bool2int(envy_free_agent1) * (sum(s in SoftConstraints_agent1) (
+                                 utils_agent1[s] * bool2int(satisfied_agent1[s]))) + bool2int(envy_free_agent2) *  
+                                 sum(sag2 in SoftConstraints_agent2) 
+                                 (utils_agent2[sag2] * bool2int(satisfied_agent2[sag2]));
+
+
+
+                      
+output [ "Envy-Free: \(envy_free)\n",
+         "Utility: \(overall_utility)\n",
+         "Assigned Agent 1: \(assigned_agent1)\n",
+         "Satisfied Agent 1: \(satisfied_agent1)\n", 
+         "Assigned Agent 2: \(assigned_agent2)\n", 
+         "Satisfied Agent 2: \(satisfied_agent2)\n", 
+         "Envy Freeness Agent 1: \(envy_free_agent1)\n", 
+         "Envy Freeness Agent 2: \(envy_free_agent2)\n" ];
+
+
+solve maximize (overall_utility); 
