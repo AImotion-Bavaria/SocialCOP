@@ -130,5 +130,12 @@ predicate envy_free() =
 );
 
 constraint envy_free();
-  
+
+% ----------------------------------------------
+% Debug: I want to display a matrix of how much agent i like agent j's share
+array[Agents, Agents] of var int: envy_analysis;
+constraint forall(i in Agents, j in Agents) (
+    envy_analysis[i,j] = util_switch(i, get_assigned_for(j))
+);
+    
 solve maximize sum(utilities);
