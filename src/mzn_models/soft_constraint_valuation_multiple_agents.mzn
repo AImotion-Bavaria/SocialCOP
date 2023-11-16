@@ -5,67 +5,130 @@ enum Tables = {NoTable, Table1, Table2};
 set of int: Agents = {1,2};
 
 array[Agents, Days] of var Tables: assigned;
-int: nSoftConstraints = 3;
-set of int: SoftConstraints = 1..nSoftConstraints;
-array[Agents, SoftConstraints] of var bool: satisfied;
-
-%overall constraint: no table can be assigned to 2 agents; exception: both can get NoTable
+% Overall constraint: no table can be assigned to 2 agents; exception: both can get NoTable
 constraint forall (d in Days) ((assigned[1, d] != assigned[2, d]) \/ (assigned[1,d] == NoTable));
 
-% preferences 1 :
+% ----------------------------------------------
+% A util function to "slice out" the assignment of some agent of the overall assignment
+% for better readability
+function array[Days] of var Tables: get_assigned_for(Agents: a) = 
+let {
+  array[Days] of var Tables: assigned_for_a;
+  constraint assigned_for_a = [assigned[a, d] | d in Days]
+}
+  in
+  assigned_for_a
+;
+
+% ----------------------------------------------
+% Generic preference-type definitions:
+function var bool: wants_some_day(array[Days] of var Tables: assigned_for_agent,
+                                  Days: day
+                                  )
+          =  (assigned_for_agent[day] != NoTable);   
+
+function var bool: wants_some_number_days(
+                         array[Days] of var Tables: assigned_for_agent,
+                         int: num_days)
+          =  (sum(d in Days) (bool2int(assigned_for_agent[d] != NoTable)) == num_days);
+
+function var bool: wants_a_break(
+                         array[Days] of var Tables: assigned_for_agent) =
+                 (not (exists(d in Days diff {Fri}) ( 
+                   (assigned_for_agent[d] != NoTable) /\ 
+                   (assigned_for_agent[enum_next(Days, d)] != NoTable)
+)));
+
+% this type of constraint is interesting - but what would it mean for envy-freeness?
+% How do I prefer my share of tables to that of another agent, esp. the agent 
+% who I want to sit with? Of course, if they have a table on Thursday, I'd like that too
+% I could only envy a third agent that has a shared day with my partner
+% Conclusion: I'm ignoring it just for now 
+function var bool: wants_shared_day(
+                  array[Days] of var Tables: assigned_for_agent,
+                  array[Days] of var Tables: assigned_for_partner)
+          =   (exists(d in Days) ( 
+                  (assigned_for_agent[d] != NoTable) /\
+                  (assigned_for_partner[d] != NoTable)
+));
+% ----------------------------------------------
+% AGENT 1
+% Preferences 1 :
+
+% ----------------------------------------------
 % 1: will Dienstag haben, 
 % 2: will zwei Tage haben, 
 % 3: will einen Tag Pause dazwischen
 
+function var int: utility_agent_1(array[Days] of var Tables: assigned_for_agent) =
+let {
+  int: nScs = 3;
+  set of int: softConstraints = 1..nScs;
+  array[softConstraints] of var bool: sat; 
+  
+  % 1: will Dienstag haben, 
+  constraint sat[1] = wants_some_day(assigned_for_agent, Tue);
+  % 2: will zwei Tage haben, 
+  constraint sat[2] == wants_some_number_days(assigned_for_agent, 2);
+  % 3: will einen Tag Pause dazwischen (keine zwei aufeinanderfolgenden Tage)     
+  constraint sat[3] == wants_a_break(assigned_for_agent);
 
-% 1: will Dienstag haben
-function var bool: wants_some_day(Agents: agent_id, 
-                         Days: day)
-          =  (assigned[agent_id, day] != NoTable);
+  % some weights for the soft constraints
+  array[softConstraints] of int: weights = [3, 2, 1];
+  var 0..sum(weights): utility = sum(s in softConstraints) (weights[s] * bool2int(sat[s]));
+} in 
+  utility
+;                                       
 
-constraint satisfied[1, 1] == wants_some_day(1, Tue);
-
-% 2: will zwei Tage haben, 
-function var bool: wants_some_number_days(
-                         Agents: agent_id, 
-                         int: num_days)
-          =  (sum(d in Days) (bool2int(assigned[agent_id, d] != NoTable)) == num_days);
-
-constraint satisfied[1, 2] == wants_some_number_days(1, 2);
-
-% 3: will einen Tag Pause dazwischen (keine zwei aufeinanderfolgenden Tage)     
-function var bool: wants_a_break(
-                         Agents: agent_id) =
-                 (not (exists(d in Days diff {Fri}) ( 
-                   (assigned[agent_id, d] != NoTable) /\ (assigned[agent_id, enum_next(Days, d)] != NoTable)
-)));
-                                                  
-constraint satisfied[1, 3] == wants_a_break(1);
-
-%AGENT2
+% AGENT 2
 % preferences 1 :
 % 1: will Donnerstag haben, 
 % 2: will drei Tage haben, 
 % 3: will min. einen Tag gemeinsam mit Agent1
-constraint satisfied[2, 1] == wants_some_day(2, Thu);
-constraint satisfied[2, 2] == wants_some_number_days(2, 3);
+function var int: utility_agent_2(array[Days] of var Tables: assigned_for_agent) =
+let {
+  int: nScs = 3;
+  set of int: softConstraints = 1..nScs;
+  array[softConstraints] of var bool: sat; 
+  
+  % 1: will Dienstag haben, 
+  constraint sat[1] = wants_some_day(assigned_for_agent, Thu);
+  % 2: will drei Tage haben, 
+  constraint sat[2] == wants_some_number_days(assigned_for_agent, 3);
+  % 3: will min. einen Tag gemeinsam mit Agent1     
+  constraint sat[3] == wants_a_break(assigned_for_agent);
 
-% 3: will min. einen Tag gemeinsam mit Agent1
+  % some weights for the soft constraints
+  array[softConstraints] of int: weights = [3, 2, 1];
+  var 0..sum(weights): utility = sum(s in softConstraints) (weights[s] * bool2int(sat[s]));
+} in 
+  utility
+;
 
-function var bool: wants_shared_day(
-                         Agents: agent_id, 
-                         Agents: partner_id)
-          =   (exists(d in Days) ( 
-                  (assigned[agent_id, d] != NoTable) /\
-                  (assigned[partner_id, d] != NoTable)
-));
+% ----------------------------------------------
+% ----------------------------------------------
+% Utility overall
 
-constraint satisfied[2, 3] == wants_shared_day(2, 1);
+% first a "dirty" hack to emulate a function pointer: a big if-then-cascade
+function var int: util_switch(int: function_id, 
+                              array[Days] of var Tables: assigned_for_agent) =
+if function_id == 1 then 
+  utility_agent_1(assigned_for_agent)
+else 
+  utility_agent_2(assigned_for_agent)
+endif;
+
+array[Agents] of var int: utilities;
+constraint utilities = [util_switch(a, get_assigned_for(a)) | a in Agents];
 
 % Envy-freeness is defined as : There are no agents $i$ and $j$ such that
 % $V_i(X_i) < V_i(X_j)$
-function var int: valuation(Agents: agent_id, Agents: other_id) =
-  
-;
 
-solve maximize sum(satisfied);
+predicate envy_free() =
+  forall(i in Agents, j in Agents where i != j) (
+       util_switch(i, get_assigned_for(i)) >= util_switch(i, get_assigned_for(j))
+);
+
+constraint envy_free();
+  
+solve maximize sum(utilities);
