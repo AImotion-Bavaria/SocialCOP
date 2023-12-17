@@ -26,5 +26,12 @@ Afterwards envy-freeness is calculated and returns if a fair solution is possibl
 
 --> value to be optimized is combination of envy-freeness and utility
 
+# Visualization of envy-freeness
+Matrix
+
+# Metric
+Envy-delta of value and max value of other agent
+
 # Grant Proposal
 https://research.google/outreach/research-scholar-program/
+

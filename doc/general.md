@@ -11,3 +11,6 @@ This can not be handled with envy-freeness (no possibility of comparing agent A'
 
 It can be viewed as shared decision problem:
 The office is the shared variable. The days Agent A gets are equal to the sights visited by multiple buses. It can be treated similarly to the scenario of a group of visitors being splitted into different buses to visit sights.
+
+Efficiency / Pareto-Optimality: There is no other allocation that is at least as good for all players and better for at least one. (Proportional FD10)
+Maximinality (MX): The allocation maximizes the minimum rank, over all players who receive a minimal bundle, of the most preferred minimal bundle (Proportional FD10)
