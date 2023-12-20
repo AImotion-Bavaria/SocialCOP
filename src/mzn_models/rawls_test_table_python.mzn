@@ -37,7 +37,7 @@ var int: num_max_values = count_eq(utilities,max(minimal_values));
 %constraint worst_util = min({x | x in utilities where ((x > max(minimal_values)))});
 constraint if num_max_values<2 then
  worst_util = min({x | x in utilities where ((x > max(minimal_values)))})
- else  worst_util = min({x | x in utilities where (x = max(minimal_values))})
+ else  worst_util = min({x | x in utilities where (x >= max(minimal_values))})
  endif;
 constraint utilities[worst_agent] = worst_util;
 
