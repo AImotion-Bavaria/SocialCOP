@@ -40,6 +40,8 @@
 \\
 \vspace*{2cm}
 {\LARGE Author: Julia Ruttmann \\Registration Number: 87648\\Supervisor: Prof. Dr. Alexander Schiendorfer\\}
+\vspace*{0.4cm}
+{\LARGE Date: 16.02.2024}
 
 \end{center}
 \newpage
@@ -68,34 +70,34 @@ Our research has shown the following suitable fairness metrics per category:
 \begin{tabular}[h]{l|c|r}
  & Agent satisfaction & Overall efficiency \\
 \hline
-Single shot division problems & Iterative Egalitarianism & Utilitarianism \\
+Single-shot Division Problems & Iterative Egalitarianism & Utilitarianism \\
  & Voting & Gini index \\
  & Envy-Freeness & Variance \\
- & Proportionality & Product of Agents' satisfaction \\
+ & Proportionality & Product of agents' satisfaction \\
 \hline
-Repeated division problems & Iterative Egalitarianism & Utilitarianism \\
+Repeated Division Problems & Iterative Egalitarianism & Utilitarianism \\
  & Voting & Gini index \\
  & Envy-Freeness & Variance \\
-& Proportionality & Product of Agents' satisfaction\\
+& Proportionality & Product of agents' satisfaction\\
 & & Artificial Karma\\
 \hline
-Single shot shared decision & Iterative Egalitarianism & Utilitarianism \\
+Single-shot Shared Decision & Iterative Egalitarianism & Utilitarianism \\
  & Voting & Gini index \\
   & & Variance \\
-& & Product of Agents' satisfaction\\
+& & Product of agents' satisfaction\\
 
 \hline
-Repeated shared decision & Iterative Egalitarianism & Utilitarianism \\
+Repeated Shared Decision & Iterative Egalitarianism & Utilitarianism \\
  & Voting & Gini index \\
  &  & Variance \\
-& & Product of Agents' satisfaction\\
+& & Product of agents' satisfaction\\
 & & Artificial Karma
 \end{tabular}
 \end{center}
 \chapter{Motivation}
 \label{sec:motivation}
 Optimization algorithms are used in a wide range of applications. The most common is to solve the problem of allocating a limited resource among a given set of agents. \cite{Chen.30.01.2021} Examples thereof include shared mobility (carpooling, organizing collective trips, choosing which sites to visit and in what order), hoteling systems for shared office space (allocating desks to employees, respecting work-from-home restrictions or making joint reservations), shared manufacturing, or managing the charging of electric vehicles (EVs) in a shared parking lot. We call them \emph{collective combinatorial optimization problems}. \\
-Most optimization algorithms today focus on either maximizing efficiency \cite{Foulds.7222018}, which is measured in terms of revenue or output, or minimizing total cost, which is usually measured in terms of labor, and prices of used materials or resources. \cite{XinyingChen.2023, Hooker} These optimization factors can be described in a formally correct way because they are measurable. An employee's hours can be counted and multiplied by his hourly wage to describe the corresponding costs in a mathematically correct way. \\In optimization use cases such as healthcare distribution, the term fairness becomes more relevant. When thinking about the distribution of essential medicine, the optimization factors of cost and efficiency appear misleading. Fairness should at least be considered as a constraint in these scenarios. In terms of patient appointments the major objections to health care distribution are described as the combination of "minimizing the cost of services, maximizing patient satisfaction, minimizing waiting time, maximizing Fairness policy, and cost efficiency" \cite{Ala.2021}. Even though the focus of this work is on fairness, it can be combined with other efficiency metrics.\\ Because fairness is more complex to define and not measurable as it is highly dependent on the current situation, it is also compound to describe it in a single mathematically correct way \cite{Binns.}.Therefore the first approach is to describe the character of the optimization problems to be solved. They can be divided into different categories which are further explained. \\ There is no single definition of fairness as it can be divided into social, political, philosophical, and legal aspects \cite{Foulds.7222018}. The two most common basic concepts of fairness, Utilitarianism, and Egalitarianism, are explained in the following chapters. The examples will show that although both approaches define fairness in their specific way, they can lead to different results when applied to the same situation \cite{Yu.7222022}. Due to their limitations, the following chapters will deal with other metrics to define and measure fairness in allocation scenarios. Some of them are based on the principles of Utilitarianism and Egalitarianism. \\ First we are focusing on voting theory followed by agent satisfaction metrics like Envy-Freeness or Proportionality. Moreover, statistical measurements such as the Gini index, variance, and standard deviation of agents' satisfaction as well as the product of agents' satisfaction will be taken into account. These measurements are overall efficiency metrics. Based on these results a set of different metrics is chosen to generalize fair allocations based on their characteristics.
+Most optimization algorithms today focus on either maximizing efficiency \cite{Foulds.7222018}, which is measured in terms of revenue or output, or minimizing total cost, which is usually measured in terms of labor, and prices of used materials or resources. \cite{XinyingChen.2023, Hooker} These optimization factors can be described in a formally correct way because they are measurable. An employee's hours can be counted and multiplied by his hourly wage to describe the corresponding costs in a mathematically correct way. \\In optimization use cases such as healthcare distribution, the term fairness becomes more relevant. When thinking about the distribution of essential medicine, the optimization factors of cost and efficiency appear misleading. Fairness should at least be considered as a constraint in these scenarios. In terms of patient appointments the major objections to health care distribution are described as the combination of "minimizing the cost of services, maximizing patient satisfaction, minimizing waiting time, maximizing Fairness policy, and cost efficiency" \cite[p.2]{Ala.2021}. Even though the focus of this work is on fairness, it can be combined with other efficiency metrics.\\ Because fairness is more complex to define and not measurable as it is highly dependent on the current situation, it is also compound to describe it in a single mathematically correct way \cite{Binns.}.Therefore the first approach is to describe the character of the optimization problems to be solved. They can be divided into different categories which are further explained. \\ There is no single definition of fairness as it can be divided into social, political, philosophical, and legal aspects \cite{Foulds.7222018}. The two most common basic concepts of fairness, Utilitarianism, and Egalitarianism, are explained in the following chapters. The examples will show that although both approaches define fairness in their specific way, they can lead to different results when applied to the same situation \cite{Yu.7222022}. Due to their limitations, the following chapters will deal with other metrics to define and measure fairness in allocation scenarios. Some of them are based on the principles of Utilitarianism and Egalitarianism. \\ First we are focusing on voting theory followed by agent satisfaction metrics like Envy-Freeness or Proportionality. Moreover, statistical measurements such as the Gini index, variance, and standard deviation of agents' satisfaction as well as the product of agents' satisfaction will be taken into account. These measurements are overall efficiency metrics. Based on these results a set of different metrics is chosen to generalize fair allocations based on their characteristics.
 \begin{figure}[h]
     \centering
     \includegraphics[width=\textwidth]{concepts}
@@ -216,7 +218,7 @@ The first approach in voting theory to be mentioned is plurality voting. The mec
 \begin{figure}[h]
 \centering
 \includegraphics[height=3.4cm]{Plurality}
-\caption{Example Plurality, see\cite{Brandt} for reference}
+\caption{Example of Plurality voting. Adapted from \cite{Brandt}}
 \end{figure}
 In this scenario, the second ballot and therefore the red solution would win. The example also shows, that 415 voters ranked the red solution as their least favorite. It still wins plurality voting as it is the alternative with the most votes.
 \\
@@ -227,11 +229,11 @@ Majority voting is very similar to Plurality voting with one major limitation. T
 One of the most common social choice functions is Copeland voting.  Instead of the algorithms shown so far, Copeland voting is relying on pairwise duels. With the Copeland voting mechanism the number of wins is counted and compared between the different possible solutions. The weight of the wins or losses and therefore the number of people voting for alternative 1 over alternative 2 is not taken into consideration. \cite{Ek,Brandt}  \\There are two different approaches to Copeland Voting: symmetric and asymmetric voting. The main difference is the way the Copeland values are calculated. While symmetric Copeland voting considers wins and losses, asymmetric voting only counts the number of wins for a certain agent.
 \\The mathematical expression of symmetric Copeland voting is: 
 \begin{align}
-\mathit{Copeland_{symmetric}}(x) = \left| \left\{ y \epsilon S \left| x>^\mu y \right\} \left| - \right| \left\{ y \epsilon S   \right| y>^\mu x   \right\} \right|
+\mathit{Copeland_{symmetric}}(x) = \left| \left\{ y\ \epsilon \ S \left| x>^\mu y \right\} \left| - \right| \left\{ y\ \epsilon \ S  \right| y>^\mu x   \right\} \right|
 \end{align} \cite{Brandt}
 \\According to the definition of asymmetric Copeland voting it can be expressed as:
 \begin{align}
-\mathit{Copeland_{asymmetric}}(x) = \left| \left\{ y \epsilon S  x>^\mu y \right\}  \right|
+\mathit{Copeland_{asymmetric}}(x) = \left| \left\{ y \ \epsilon \ S \ | \ x>^\mu y \right\}  \right|
 \end{align}\cite{Brandt}
 With S being the set of solutions and x and y being different solutions.
 \\Using the distribution of goods among a specific number of agents as an example, the foundations of the Copeland voting mechanism can be described.  Firstly, a set of all possible solutions is created using basic statistical mathematics. Next, each agent can vote for their preferred solution, generating an ordinal set of solutions for every agent in the example. The ranking process itself is not specified in this step. Hence, a prospective voter could evaluate the solutions by determining their associated costs. Accordingly, the solution receiving the highest numerical value would be considered the least desirable. Another viable option is calculating the benefits of each solution, whereby the highest number represents the best solution. By not requiring the specification of an individualized valuation approach for each voter, but only relying on the resultant ordered list of potential solutions, this method provides numerous customized possibilities for diverse stakeholders and is not dependent on comparable agents' valuation functions. \cite{Bhavnani.2022b} After each agent has created an ordinal list of solutions, they are granted equal voting power for the next step. The various solutions are then compared to one another through a one-by-one approach in which two solutions are compared by reviewing each voter's ordinal list. \cite{Bhavnani.2022b, Brandt} When comparing Solutions 1 and 2, Solution 1 receives a point for every voter who prefers it over Solution 2. The same method is applied in favor of Solution 2. In the next step, the number of defeats is subtracted from the winning number. This step is not taken into account if the asymmetric approach is chosen. The process is repeated for every possible set of duels within the set of solutions, and the number of winning (and losing) duels is recorded for each possible solution.  In the end, each solution is compared based on points (so-called Copeland scores) and the solution with the higher score wins the duel. Finally, the solution with the highest number of wins (and the lowest number of losses) is deemed the overall winner and is considered the fairest solution for all agents involved. In symmetric Copeland voting this is achieved by counting the number of wins and losses and subtracting the number of losses from the number of wins. The higher this value gets, the higher the number of wins was compared to losses. \cite{Bhavnani.2022b,Ek, Brandt}
@@ -239,12 +241,12 @@ The asymmetric Copeland voting mechanism can deal with ties among the different 
 \begin{figure}[h]
 \centering
 \includegraphics[height=4.4cm]{Copeland}
-\caption{See \cite{Bhavnani.2022b} for reference. Example for a symmetric Copeland voting. The blue solution would be the winner with 3 wins and a Copeland value of 3}
+\caption{Example for a symmetric Copeland voting. The blue solution would be the winner with 3 wins and a Copeland value of 3. Adapted from \cite{Bhavnani.2022b} }
 %\end{figure}
 %\begin{figure}[h]
 %\centering
 \includegraphics[height=4cm]{Copeland_asym}
-\caption{See \cite{Bhavnani.2022b} for reference. Example for an asymmetric Copeland voting. The blue solution would be the winner with 3 wins and a Copeland value of 3}
+\caption{Example for an asymmetric Copeland voting. The blue solution would be the winner with 3 wins and a Copeland value of 3. Adapted from \cite{Bhavnani.2022b}}
 \end{figure}
 \\
 As an example of symmetric and asymmetric Copeland voting, we consider a similar scenario as the voting prerequisites previously shown. With this chosen example the different calculations of asymmetric and symmetric Copeland values can be shown:
@@ -329,7 +331,7 @@ Another way of finding equal results is based on a geometrical concept. The prod
 \\Even if the sum of both values is limited, the highest number of the product is still achieved if the two numbers differ the least. A way to express fairness can therefore be shown by the maximization of the product of all agents' valuations. \\As seen previously if fair allocation is not considered as equality within the allocation of the goods, the agent's valuation functions should be equalized instead of the distribution of the underlying good. Therefore this theory focuses on an equal distribution of the resource by maximizing the product of all utilities. \\This metric can easily be combined with other metrics like Utilitarianism. In this case, the maximum of the sum of the valuation functions and the maximum of the product of the valuation functions are searched for. \cite{Albrecht.2024}
 
 \section{Repetition}
-Fairness in resource distribution is about ensuring that agents facing similar needs receive comparable access to limited resources. Sometimes this is not achievable during a single allocation. Therefore the goal can be balanced across multiple iterations of allocations if the problem exists more than once.\cite{Elokda.2023}
+Fairness in resource distribution is about ensuring that agents facing similar needs receive comparable access to limited resources. Sometimes this is not achievable during a single allocation. Therefore the goal can be balanced across multiple iterations of allocations if the problem exists more than once. \cite{Elokda.2023}
 \subsection{Artificial Karma}
 When the allocation process does not only take place a single time but is repeated multiple times we can also think of a new metric realizing the balance between the allocations. One of these approaches is the use of artificial karma. It is inspired by the Indian tradition of karma. The main concept is based on the way small communities share a limited amount of resources like fish in a lake \cite{Berkes}. \\The principle shown in \cite{Elokda.2023} is based on a situation where an indivisible good should be allocated to one of two agents randomly picked out of a bigger set of agents. This procedure is repeated infinite times. One example of such a situation is a car ride scenario where two people are requesting a car ride but there is only one car available at this time. This situation is taking place more than one time. The agents may have different preferences during the time sequences and can show their preferences using their karma scores. Karma therefore is treated as a counter of taking or giving. If an agent is not taking the resource in a one-to-one tournament it will increase his karma score and the agent might benefit from the higher karma score during the next round. Once an agent takes the resource it will decline its karma score so the probability of this same agent getting the next resource as well is limited. Therefore an agent with a high karma score has probably not taken many resources in the past while an agent with a low karma score has probably already taken a higher amount of resources. Consequently, artificial karma mainly focuses on alternating the allocation of goods among the agents.  The amount of karma given or taken by the agent does not need to be the same for every tournament. It can differ by the preferences of getting the resource to the given time. The karma allocation can therefore be seen as a kind of public sale. With this technique, it is possible to include the agents' preferences.  \cite{Elokda.2023} \\Karma is therefore a measurement of how much the agent needs the current distribution. Unlike other fairness metrics, the agents' valuation is therefore comparable because it is based on the number of karma they are willing to invest. \\The reason money and karma need to be split is because of the uneven distribution of money in the first place. If the distribution of goods was performed by a public sale for all goods, wealthy people would always have the privilege of more prospects towards resources. Karma on the other hand can be equally distributed at the beginning of the scenario and afterwards, it is always based on the resources taken or given and therefore guarantees that there is no overly favored agent getting all the resources. If an agent spends too much of his karma there will be no karma left for the next rounds etc.  \cite{Elokda.2023}
 There are different approaches to how much karma is taken from and given to certain agents. This work focuses on the approach called "Pay bid to peer". In this approach the one bidding the higher value is directly transacting the money to the one not getting the resource. \cite{Elokda.2023} \\Given the above example of two agents competing for a car ride. Let's assume both agents are new to the platform of the taxi company so their initial karma level is both 100. The taxi company would now offer the agents to set the amount of karma they want to spend on the car ride. The agent getting the car ride invests the corresponding amount of karma which is therefore subtracted from their account, while the one not getting the car ride is gaining the amount of karma to their account. When the agent not taking the ride is requesting a new one, he has more karma left and therefore it is easier for him to get the new car ride. The bidding process does not necessarily need to be done by the agents themselves. There could also be some kind of optimization algorithm training on how much karma to invest to get the best result for the given agent.
@@ -338,7 +340,7 @@ There are different approaches to how much karma is taken from and given to cert
 \includegraphics[width=0.8\textwidth]{AK}
 \caption{Process of two agents competing for 2 car rides. The two iterations take place after each other.}
 \end{figure}
-Even though the process of getting or not getting a ressource at one iteration might seem unfair to agents it can be balanced out over multiple iterations. Artificial karma is a better approach than money to reach that goal of balancing multiple iterations of allocations as it only relies on giving or taking and can be evenly distributed in the first place. \cite{Elokda.2023}
+Even though the process of getting or not getting a resource at one iteration might seem unfair to agents it can be balanced out over multiple iterations. Artificial karma is a better approach than money to reach that goal of balancing multiple iterations of allocations as it only relies on giving or taking and can be evenly distributed in the first place. \cite{Elokda.2023}
 
 \chapter{Usage of Metrics based on the Problem Characteristic}
 The following chapters divide real-world situations of fair allocation of a set of resources among a set of agents into eight categories. The categories are explained and the metrics used for these situations are explained and adjusted to the type of problem.
@@ -357,7 +359,7 @@ Single-shot division problems involve a set of agents and resources that are dis
   \item Proportionality
 \item Gini Index
 \item Variance / Standard Deviation
-\item Product of Agents' satisfaction
+\item Product of Agents' Satisfaction
 \end{itemize}
 The metric to be chosen from the list is dependent on the given scenario and the definition of fairness or equality. Even within the group of single-shot division problems, we can divide the scenarios into multiple different groups. One of the main differences within the scenarios of single-shot division Problems is the goal of the distribution. The main focus of the distribution can be fair overall efficiency and the maximization of agent satisfaction. To ensure fair allocation, different metrics must be considered depending on the question to be solved. If the overall efficiency is the main goal one agent's preferences do not necessarily need to be met to achieve this goal. Suitable metrics are Utilitarianism, where the improvement of the overall welfare is the main optimization factor, and the Gini coefficient as well as variance, standard deviation, and the product of agents' valuations. If agent satisfaction is the main goal, metrics like iterative Egalitarianism, Voting, Envy-Freeness, and Proportionality should be taken under consideration as they focus on the agents' preferences instead of the overall welfare. Voting is considered a measurement focusing on agent satisfaction as it highly relies on the agents' preferences instead of an overall equality approach. This classification is based on the assumption that agents only consider their allocation in voting theory. Therefore two solutions with the same allocation for one agent need to be ranked the same in the used voting technique.\\ Furthermore the resources can be separated into two categories: divisible and indivisible. \cite{Brandt} Divisible resources can be split, like time or money, while indivisible resources can not be split like tables in a shared office. Two agents can not sit at the same office table at the same time. Even though divisible resources can be split, in single-shot division problems all agents still get a unique set of non-shared resources. The amount of money or time given to them does not need to be shared with other agents. Therefore the next two subsections will not differ for divisible and indivisible resources.
 
@@ -383,7 +385,7 @@ When a single-shot division problem occurs multiple times, it is referred to as 
 \item Gini Index
 \item Variance / Standard Deviation
 \item Artificial karma
-\item Product of Agents' satisfaction
+\item Product of Agents' Satisfaction
 \end{itemize}
 The following two chapters will divide these metrics into the categories of agent satisfaction and overall efficiency metrics in the above example.
 \subsection{Agent Satisfaction in Repeated Division Problems}
@@ -396,7 +398,7 @@ The Gini index can be used for repeated allocations as it can ensure not only fa
 The statistical measurements of variance can be used to measure fair distribution among a repeated division problem \cite{Ek}. As seen previously, it can be used by taking the allocation variance into account if an equal distribution is the main goal. Besides that, the agents' satisfaction can also be taken into account ensuring a fair division and therefore taking the agents' preferences into account. As we are focusing on a desk allocation problem we want to focus on the agents' satisfaction as input parameter instead of the distribution of the tables. While a single allocation needs to be fair and maximized at the same time, repetition can allow us to focus on maximization in a single iteration and keep fairness up over time. Therefore the variance can be calculated not only over a single distribution but on multiple ones and compared among the agents. If the solution is valid it would still be considered a fair allocation if $agent_1$ gets a higher satisfaction factor in week A if $agent_2$ gets a higher satisfaction factor with the allocation of the week after. Therefore the focus of a single iteration is shifted towards optimization of satisfaction while the sum of iterations focuses on the fair distribution by guaranteeing a low variance value among the agents' satisfactions.
 \\
 When comparing Utilitarianism with the Gini index or variance, the Gini index and variance can be calculated step by step even if the former allocation is already set, while Utilitarianism should calculate a sequence of allocations once to ensure the best solutions.
-\\Artificial Karma can also be used to ensure fairness through the iterations. At the very first iteration, every agent is getting the same amount of karma. For every iteration, they can use their karma to get the resource or they can get more karma points by abdicating the resource. When a resource is not taken the amount of karma is increased. Therefore in the next iteration, the agent can use more karma points and is therefore more likely to get the ressource. If the agent is using the karma points there is less left and the probability of using it in the next iteration is smaller as the willingness of the agent to spend much karma is decreased. As the karma metric is currently only applied to one-to-one duels, the allocation problem should be rearranged to fit this model. If this is not applicable a new strategy to use Karma among a larger set of agents requiring the same resources needs to be conducted. \cite{Elokda.2023}
+\\Artificial Karma can also be used to ensure fairness through the iterations. At the very first iteration, every agent is getting the same amount of karma. For every iteration, they can use their karma to get the resource or they can get more karma points by abdicating the resource. When a resource is not taken the amount of karma is increased. Therefore in the next iteration, the agent can use more karma points and is therefore more likely to get the resource. If the agent is using the karma points there is less left and the probability of using it in the next iteration is smaller as the willingness of the agent to spend much karma is decreased. As the karma metric is currently only applied to one-to-one duels, the allocation problem should be rearranged to fit this model. If this is not applicable a new strategy to use Karma among a larger set of agents requiring the same resources needs to be conducted. \cite{Elokda.2023}
 \section{Single-shot Shared Decisions}
 Besides the allocation of sets of resources to every single agent, there is also the possibility of a shared decision as an allocation problem. In this scenario, the same allocation is applied to all agents taking part in the distribution. All agents in the allocation problem need to compromise on one solution set. Therefore the metrics already discussed previously can not be used in the same way we applied them in division problems. Concepts like Envy-Freeness can not be considered if every agent is getting the same allocation as there is no agent they could envy. Nevertheless, the prediscussed categories of agent satisfaction next to overall efficiency can still be applied to shared decisions. Therefore the list of metrics to be used with single-shot shared decisions is the following:
 \begin{itemize}
@@ -405,7 +407,7 @@ Besides the allocation of sets of resources to every single agent, there is also
   \item Voting
 \item Gini
 \item Variance
-\item Product of Agents' satisfaction
+\item Product of Agents' Satisfaction
 \end{itemize}
 The adaption of these metrics within situations of shared decisions is discussed in the following chapters. Again one real-world scenario is used to give an example of how to apply the metrics to solve an allocation problem. The scenario we want to focus on is a shared decision of a group of tourists traveling together with a tour bus. The tour guide provides a list of sightseeing attractions that could be visited by the tour bus. As the bus can only take one route, all tourists need to travel to the same sights. Of course, the different agents (in this case the tourists) have different preferences like the time they want to travel in between the sights or their special interests in the different sights. This scenario is also a combinatorial problem just as the desk-sharing example was. Still, the characteristic differs a lot as the resources allocated to an agent do not differ between the agents. In this scenario, the number of sights to be visited can depend on the other sights. Therefore the travel time from sight to sight and the time at the sight can be calculated as costs. Costs should not be minimized but optimized to stay below a certain budget in this scenario. We can assume that the tourists do not want to only go to one sight or even no sight because it would be less costly. Instead, the given time frame, the time budget, should be covered with sights. Therefore the costs should be as close as possible to the budget but not above.
 \subsection{Agent Satisfaction in Single-shot Shared Decisions}
@@ -423,7 +425,7 @@ Repeated shared decisions share similar characteristics with single-shot shared 
   \item Voting
 \item Gini Index
 \item Variance / Standard Deviation
-\item Product of Agents' satisfaction
+\item Product of Agents' Satisfaction
 \item Artificial karma
 \end{itemize}
 The already used real-world scenario of a group of tourists sharing the same bus trip and deciding which route to choose is now expanded by multiple iterations. We assume the tour is not only done for one day but for every day of the week. If a sight is not chosen on e.g. Monday, it can be chosen for Tuesday, etc. Therefore it is possible to focus on more of the agents' favorite sights when at the same time the efficiency can still be taken into consideration.
