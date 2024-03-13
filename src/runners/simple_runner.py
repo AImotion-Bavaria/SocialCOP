@@ -4,10 +4,14 @@
 # https://minizinc-python.readthedocs.io/en/latest/getting_started.html#installation
 from minizinc import Instance, Model, Solver
 
-simple_agents = Model("mzn_models/hello_social_cop.mzn")
+import os
+hello_social_model = os.path.join(os.path.dirname(__file__), '../mzn_models/hello_social_cop.mzn')
+hello_social_data = os.path.join(os.path.dirname(__file__), '../mzn_models/test1.dzn')
+
+simple_agents = Model(hello_social_model)
 # Find the MiniZinc solver configuration for Gecode
 gecode = Solver.lookup("gecode")
-simple_agents.add_file("mzn_models/test1.dzn")
+simple_agents.add_file(hello_social_data)
 # Create an Instance of the simple agents model for Gecode
 instance = Instance(gecode, simple_agents)
 
