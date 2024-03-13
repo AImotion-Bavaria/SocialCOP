@@ -1,6 +1,6 @@
 dimension = 4;
 %maxmin_values = [30, 98, 98];
-maxmin_values = [];
+%maxmin_values = [];
 values=[|   98, 30, 98, 98 |
             98, 30, 98, 99 |
             42, 37, 80, 12 |
