@@ -1,11 +1,12 @@
 import unittest
 import sys
+import os
 import warnings
 from minizinc import Model
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-sys.path.append('src/runners')
-import os
+sys.path.append(os.path.join(os.path.dirname(__file__), "../src/runners"))
+
 
 from simple_runner import SimpleRunner
 
@@ -17,6 +18,7 @@ class BaseModelsTest(unittest.TestCase):
     
     def test_plain_tabular(self):
         plain_tabular_model = Model(os.path.join(os.path.dirname(__file__), "../src/models/plain_tabular/plain_tabular.mzn")) 
+        plain_tabular_model.add_file(os.path.join(os.path.dirname(__file__), '../src/models/plain_tabular/plain_tabular.dzn'), parse_data=True)
         result = self.simple_runner.run(plain_tabular_model)
         self.assertIsNotNone(result)
 

@@ -1,6 +1,7 @@
 import json 
 
 AGENTS_ARRAY = "agents_array"
+NUM_AGENTS = "num_agents"
 UTILITY_ARRAY = "utility_array"
 MAIN_VARIABLES = "main_variables"
 

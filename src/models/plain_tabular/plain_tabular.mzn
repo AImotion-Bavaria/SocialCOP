@@ -6,13 +6,12 @@
 % We shall use it to test various solution runners 
 include "table.mzn";
 
-set of int: Agents = 1..4;
+int: n_agents;
+set of int: Agents = 1..n_agents;
 
 array[Agents] of var 0..100: utilities;
+array[int, Agents] of int: possible_solutions;
 
 constraint table(utilities, 
-                 [| 50, 20, 30, 99 |
-                    39, 18, 12, 99 |
-                    42, 37, 80, 12 |
-                    20, 80, 80, 80|]);
+                possible_solutions);
                     

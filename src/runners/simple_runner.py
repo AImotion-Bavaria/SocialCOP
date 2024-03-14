@@ -12,8 +12,14 @@ class SimpleRunner:
         instance = Instance(solver, model)
         with instance.branch() as child:
             self.presolve_hook(child)
-            result = child.solve()
+            result = self.solve(child)
         return result 
+    
+    def solve(self, child : Instance):
+        """
+        intended to be overwritten by specialized runners 
+        """ 
+        return child.solve()
     
     def add_presolve_handler(self, presolve_handler):
         self.presolve_handlers.append(presolve_handler)

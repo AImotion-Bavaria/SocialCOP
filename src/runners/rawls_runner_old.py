@@ -27,7 +27,7 @@ while(counter <= dimension):
         print(result)
 
         #calculate and store preconditions for next iteration 
-        worst_util = result["worst_util"]# int(re.search(r'worst_util=(\d+)', str(result)).group(1))
+        worst_util = result["worst_util"]
         min_val[counter-1]=worst_util
         counter = counter + 1
 
