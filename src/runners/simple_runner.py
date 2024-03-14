@@ -4,20 +4,34 @@
 # https://minizinc-python.readthedocs.io/en/latest/getting_started.html#installation
 from minizinc import Instance, Model, Solver
 
-import os
-hello_social_model = os.path.join(os.path.dirname(__file__), '../mzn_playground/hello_social_cop.mzn')
-hello_social_data = os.path.join(os.path.dirname(__file__), '../mzn_playground/test1.dzn')
+class SimpleRunner:
+    def __init__(self) -> None:
+        self.presolve_handlers = [] # a list of functions applied before solving
 
-simple_agents = Model(hello_social_model)
-# Find the MiniZinc solver configuration for Gecode
-gecode = Solver.lookup("gecode")
-simple_agents.add_file(hello_social_data)
-# Create an Instance of the simple agents model for Gecode
-instance = Instance(gecode, simple_agents)
+    def run(self, model, solver = Solver.lookup("gecode")):
+        instance = Instance(solver, model)
+        with instance.branch() as child:
+            self.presolve_hook(child)
+            result = child.solve()
+        return result 
+    
+    def add_presolve_handler(self, presolve_handler):
+        self.presolve_handlers.append(presolve_handler)
 
-# Assign 4 to n
-#instance["n"] = 4
-#instance["m"] = 2
-result = instance.solve()
-# Output the array q
-print(result["selected"]) 
+    def presolve_hook(self, instance):
+        for handler in self.presolve_handlers:
+            handler(instance)
+
+
+if __name__ == "__main__":
+    import os
+    hello_social_model = os.path.join(os.path.dirname(__file__), '../mzn_playground/hello_social_cop.mzn')
+    hello_social_data = os.path.join(os.path.dirname(__file__), '../mzn_playground/test1.dzn')
+    simple_agents = Model(hello_social_model)
+    simple_agents.add_file(hello_social_data)
+    # Find the MiniZinc solver configuration for Gecode
+    gecode = Solver.lookup("gecode")
+    
+    simple_runner = SimpleRunner()
+    result = simple_runner.run(simple_agents, gecode)
+    print(result["selected"])

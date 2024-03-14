@@ -1,8 +1,11 @@
 from minizinc import Instance, Model, Solver
 import re
 
-model = Model("src/mzn_models/rawls_test_table_python.mzn")
-model.add_file("src/mzn_models/rawls2.dzn", parse_data=True)
+import os
+
+
+model = Model(os.path.join(os.path.dirname(__file__), "../mzn_playground/rawls_test_table_python.mzn"))
+model.add_file(os.path.join(os.path.dirname(__file__), "../mzn_playground/rawls2.dzn"), parse_data=True)
 # Find the MiniZinc solver configuration for Gecode
 gecode = Solver.lookup("gecode")
 # Create an Instance of the simple agents model for Gecode

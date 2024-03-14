@@ -5,8 +5,11 @@
 import random
 from minizinc import Instance, Model, Solver
 
+import os 
 # weighted_social_cop.mzn
-simple_agents = Model("./src/mzn_models/weighted_social_cop.mzn")
+os.path.join(os.path.dirname(__file__), "rawls.dzn")
+simple_agents = Model(os.path.join(os.path.dirname(__file__), "../mzn_playground/weighted_social_cop.mzn") )
+
 # Find the MiniZinc solver configuration for Gecode
 gecode = Solver.lookup("gecode")
 

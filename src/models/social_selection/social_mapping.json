@@ -1,0 +1,5 @@
+{
+    "agents_array" : "Agents",
+    "utility_array" : "utilities",
+    "main_variables": ["selected"]
+}
