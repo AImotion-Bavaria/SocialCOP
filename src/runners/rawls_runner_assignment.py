@@ -1,8 +1,9 @@
 from minizinc import Instance, Model, Solver
+import os
 
 class RawlsRunner():
     def run_rawls(datafile):
-        model = Model("src/mzn_models/rawls_test_table_python_assignment.mzn")
+        model = Model(os.path.join(os.path.dirname(__file__), "../mzn_playground/rawls_test_table_python_assignment.mzn"))
         model.add_file(datafile, parse_data=True)
         # Find the MiniZinc solver configuration for Gecode
         gecode = Solver.lookup("gecode")

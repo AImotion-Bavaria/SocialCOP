@@ -5,8 +5,8 @@
 from minizinc import Instance, Model, Solver
 
 import os
-hello_social_model = os.path.join(os.path.dirname(__file__), '../mzn_models/hello_social_cop.mzn')
-hello_social_data = os.path.join(os.path.dirname(__file__), '../mzn_models/test1.dzn')
+hello_social_model = os.path.join(os.path.dirname(__file__), '../mzn_playground/hello_social_cop.mzn')
+hello_social_data = os.path.join(os.path.dirname(__file__), '../mzn_playground/test1.dzn')
 
 simple_agents = Model(hello_social_model)
 # Find the MiniZinc solver configuration for Gecode

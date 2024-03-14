@@ -18,7 +18,7 @@ class Experiment:
     def test_gini(self):
     #Test gini calculation 
         a = np.zeros((1000)) #create array of zeros
-        a[0]=1.0 #change first value only to 1.0
+        a[0] = 1.0 #change first value only to 1.0
         gini_index = self.calculate_gini(a) #as array is not equally distributed, gini should be high
         print(f"Gini-Index Test: Should be close to 1: {gini_index:.4f}\n\n")
         
