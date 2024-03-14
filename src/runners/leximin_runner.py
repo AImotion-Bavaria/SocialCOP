@@ -37,7 +37,7 @@ class LeximinRunner(SimpleRunner):
         updated_result=0
         for i in range(num_agents):
             with child.branch() as inst:
-                inst["maxmin_values"] = maxmin_values
+                inst[MAXMIN_VALUES] = maxmin_values
                 result = inst.solve()
 
                 #calculate and store preconditions for next iteration 
