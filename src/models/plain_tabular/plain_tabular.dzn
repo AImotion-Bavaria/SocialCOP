@@ -1,4 +1,5 @@
 n_agents = 4;
+m=4;
 
 possible_solutions =  [| 50, 20, 30, 99 |
                     39, 18, 12, 99 |
