@@ -1,5 +1,4 @@
 dimension = 4;
-m=6;
 
 utility_array=[|   98, 30, 98, 98 |
             98, 30, 98, 99 |
