@@ -11,6 +11,7 @@ from util.social_mapping_reader import read_social_mapping, AGENTS_ARRAY, UTILIT
 LEXIMIN_AGENTS_PLACEHOLDER = "Agents_Rawls_Mixin"
 LEXIMIN_UTILITIES_PLACEHOLDER = "utilities_Rawls_Mixin"
 MAXMIN_VALUES = "maxmin_values"
+MAXMIN_AGENTS = "maxmin_agents"
 NEXT_WORST_UTIL = "next_worst_util"
 NEXT_WORST_AGENT = "next_worst_agent"
 
@@ -34,7 +35,7 @@ class LeximinRunner(SimpleRunner):
 
         # gets initialized to be empty, updated with minimal values as we go
         maxmin_values = []
-        updated_result=0
+        updated_result = 0
         for i in range(num_agents):
             with child.branch() as inst:
                 inst[MAXMIN_VALUES] = maxmin_values
@@ -46,6 +47,7 @@ class LeximinRunner(SimpleRunner):
 
                 # some logging
                 logging.info(f"Currently worst-off agent {result[NEXT_WORST_AGENT]} with utility {result[NEXT_WORST_UTIL]}")
+                logging.info(f"Maxmin agents: {result[MAXMIN_AGENTS]}")
                 updated_result = result[self.social_mapping[UTILITY_ARRAY]]
         return updated_result
 

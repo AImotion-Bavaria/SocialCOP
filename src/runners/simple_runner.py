@@ -22,6 +22,11 @@ class SimpleRunner:
         return child.solve()
     
     def add_presolve_handler(self, presolve_handler):
+        """_summary_
+
+        Args:
+            presolve_handler (function): function takes a child instance as argument
+        """
         self.presolve_handlers.append(presolve_handler)
 
     def presolve_hook(self, instance):

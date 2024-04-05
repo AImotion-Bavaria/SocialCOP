@@ -1,0 +1,5 @@
+{
+    "agents_array" : "Passenger",
+    "utility_array" : "score",
+    "main_variables": ["selected"]
+}

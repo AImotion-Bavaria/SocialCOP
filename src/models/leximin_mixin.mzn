@@ -1,7 +1,7 @@
 set of int: Agents_Rawls_Mixin;
 array[Agents_Rawls_Mixin] of var int: utilities_Rawls_Mixin; 
 
-var 0..100: next_worst_util;
+var int: next_worst_util;
 var Agents_Rawls_Mixin: next_worst_agent;
 
 % maxmin_values are the maximized minimal values we received over time

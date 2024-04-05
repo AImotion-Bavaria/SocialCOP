@@ -12,7 +12,7 @@ from util.social_mapping_reader import read_social_mapping, AGENTS_ARRAY, UTILIT
 
 def add_pareto_objective(social_mapper, instance : Instance):
     instance.add_string(f"int: m = card(index_set_1of2(possible_solutions));")
-    instance.add_string(f"constraint exists(j in 1..m) (forall(i in 1..{social_mapper[NUM_AGENTS]}) (utilities[i] = possible_solutions[j, i]));")
+    # subsumed by table constraint: instance.add_string(f"constraint exists(j in 1..m) (forall(i in 1..{social_mapper[NUM_AGENTS]}) (utilities[i] = possible_solutions[j, i]));")
     instance.add_string(f"constraint not exists(j in 1..m) (sum(i in 1..{social_mapper[NUM_AGENTS]}) (bool2int(utilities[i] == possible_solutions[j, i]))+sum(i in 1..{social_mapper[NUM_AGENTS]}) (bool2int(utilities[i] < possible_solutions[j, i]))=={social_mapper[NUM_AGENTS]}/\ sum(i in 1..{social_mapper[NUM_AGENTS]}) (bool2int(utilities[i] < possible_solutions[j, i]))>0);")
 
 def optimize_pareto_objective(instance : Instance):

@@ -28,6 +28,7 @@ if __name__ == "__main__":
     import os
     social_selection_model = Model(os.path.join(os.path.dirname(__file__), '../models/social_selection/social_selection.mzn'))
     n_agents = 5
+    # we can also set some parameters to the Model instance right here in Python (or read from dzh)
     social_selection_model["m"] = 3
     social_selection_model["n"] = n_agents 
     social_selection_model["weights"] = [1+i for i in range(n_agents)]
@@ -39,7 +40,9 @@ if __name__ == "__main__":
     social_mapping = read_social_mapping(social_mapping_file)
 
     simple_runner = UtilitarianRunner()
+    # insert all decision variables to calculate the utilitarian objective for this model
     simple_runner.add_presolve_handler(partial(add_utilitarian_objective, social_mapping))
+    # actually optimize for the utilitarian objective
     simple_runner.add_presolve_handler(optimize_utilitarian_objective)
     result = simple_runner.run(social_selection_model, gecode)
     print(result["selected"])
