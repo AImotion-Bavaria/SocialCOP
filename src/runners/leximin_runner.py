@@ -3,11 +3,13 @@ from minizinc import Model, Solver, Instance
 import sys 
 import os 
 import logging
-
-sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 from functools import partial
 
+sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
+
 from util.social_mapping_reader import read_social_mapping, AGENTS_ARRAY, UTILITY_ARRAY, NUM_AGENTS
+from util.mzn_debugger import create_debug_folder, log_and_debug_generated_files
+
 LEXIMIN_AGENTS_PLACEHOLDER = "Agents_Rawls_Mixin"
 LEXIMIN_UTILITIES_PLACEHOLDER = "utilities_Rawls_Mixin"
 MAXMIN_VALUES = "maxmin_values"
@@ -17,8 +19,8 @@ NEXT_WORST_AGENT = "next_worst_agent"
 
 def add_leximin_mixin(social_mapper, instance : Instance):
     instance.add_file(os.path.join(os.path.dirname(__file__), '../models/leximin_mixin.mzn'))
-    instance.add_string(f"{LEXIMIN_AGENTS_PLACEHOLDER} = {social_mapper[AGENTS_ARRAY]};")
-    instance.add_string(f"{LEXIMIN_UTILITIES_PLACEHOLDER} = {social_mapper[UTILITY_ARRAY]};")
+    instance.add_string(f"{LEXIMIN_AGENTS_PLACEHOLDER} = {social_mapper[AGENTS_ARRAY]};\n")
+    instance.add_string(f"{LEXIMIN_UTILITIES_PLACEHOLDER} = {social_mapper[UTILITY_ARRAY]};\n")
 
 class LeximinRunner(SimpleRunner):
     def __init__(self, social_mapping) -> None:
@@ -39,6 +41,8 @@ class LeximinRunner(SimpleRunner):
         for i in range(num_agents):
             with child.branch() as inst:
                 inst[MAXMIN_VALUES] = maxmin_values
+                if self.debug:
+                    log_and_debug_generated_files(inst, "leximin_runner_inst", i)
                 result = inst.solve()
 
                 #calculate and store preconditions for next iteration 
@@ -53,7 +57,10 @@ class LeximinRunner(SimpleRunner):
 
 if __name__ == "__main__":    
     logging.basicConfig(level=logging.INFO)
-    plain_tabular_model = Model(os.path.join(os.path.dirname(__file__), '../models/plain_tabular/plain_tabular.mzn'))
+    debug_dir = create_debug_folder(os.path.dirname(__file__))
+    plain_tabular_model = Model()
+    plain_tabular_model_file = os.path.join(os.path.dirname(__file__), '../models/plain_tabular/plain_tabular.mzn')
+    plain_tabular_model.add_file(plain_tabular_model_file, parse_data=True)
     plain_tabular_model.add_file(os.path.join(os.path.dirname(__file__), '../models/plain_tabular/plain_tabular.dzn'), parse_data=True)
     gecode = Solver.lookup("gecode")
     
@@ -62,6 +69,8 @@ if __name__ == "__main__":
     social_mapping = read_social_mapping(social_mapping_file)
 
     simple_runner = LeximinRunner(social_mapping)
+    simple_runner.debug = True
+    simple_runner.debug_dir = debug_dir
     simple_runner.add_presolve_handler(partial(add_leximin_mixin, social_mapping))
     result = simple_runner.run(plain_tabular_model, gecode)
     print(result)

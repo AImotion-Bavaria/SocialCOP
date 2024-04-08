@@ -7,10 +7,13 @@ from minizinc import Instance, Model, Solver
 class SimpleRunner:
     def __init__(self) -> None:
         self.presolve_handlers = [] # a list of functions applied before solving
+        self.debug = False
+        self.debug_dir = None
 
     def run(self, model, solver = Solver.lookup("gecode")):
-        instance = Instance(solver, model)
-        with instance.branch() as child:
+        self.instance = Instance(solver, model)
+        self.model = model 
+        with self.instance.branch() as child:
             self.presolve_hook(child)
             result = self.solve(child)
         return result 
