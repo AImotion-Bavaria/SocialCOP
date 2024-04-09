@@ -29,7 +29,7 @@ def add_envy_freeness_mixin(social_mapper, instance : Instance):
     # constraint envy_free();
 
     # TODO test if model is amenable to fair division (needs share function and share util specified)
-    envy_free_mixin_template_file = os.path.join(os.path.dirname(__file__), '../models/envy_freeness_mixin.mzn')
+    envy_free_mixin_template_file = os.path.join(os.path.dirname(__file__), '../models/envy_freeness_mixin_template.mzn')
     envy_free_mixin_template = Template(Path(envy_free_mixin_template_file).read_text())
     sub_dict = {AGENTS_ARRAY_MIXIN : social_mapper[AGENTS_ARRAY],
                 SHARE_FUNCTION_MIXIN : social_mapper[SHARE_FUNCTION],
@@ -39,7 +39,7 @@ def add_envy_freeness_mixin(social_mapper, instance : Instance):
     instance.add_string(envy_free_mixin)
 
 def optimize_envy(instance : Instance):
-    instance.add_string(f"\nsolve minimize envy_pairs();\n")
+    instance.add_string(f"\nsolve minimize envy_pairs;\n")
 
 def enforce_envy_freeness(instance : Instance):
     instance.add_string(f"\nconstraint envy_free();\n")
