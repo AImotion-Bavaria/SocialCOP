@@ -3,18 +3,25 @@
 # Follow the installation instructions at
 # https://minizinc-python.readthedocs.io/en/latest/getting_started.html#installation
 from minizinc import Instance, Model, Solver
+import sys, os
+sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
+from util.mzn_debugger import create_debug_folder, log_and_debug_generated_files
 
 class SimpleRunner:
-    def __init__(self) -> None:
+    def __init__(self, social_mapping = None) -> None:
         self.presolve_handlers = [] # a list of functions applied before solving
         self.debug = False
         self.debug_dir = None
+        self.social_mapping = social_mapping
 
     def run(self, model, solver = Solver.lookup("gecode")):
         self.instance = Instance(solver, model)
         self.model = model 
         with self.instance.branch() as child:
             self.presolve_hook(child)
+            # immediately before solving, log this model
+            if self.debug:
+                    log_and_debug_generated_files(child, "simple_runner_child", 0)
             result = self.solve(child)
         return result 
     

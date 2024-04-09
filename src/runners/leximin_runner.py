@@ -24,8 +24,7 @@ def add_leximin_mixin(social_mapper, instance : Instance):
 
 class LeximinRunner(SimpleRunner):
     def __init__(self, social_mapping) -> None:
-        super().__init__()
-        self.social_mapping = social_mapping
+        super().__init__(social_mapping)
 
     def run(self, model, solver=...):
         self.model = model
