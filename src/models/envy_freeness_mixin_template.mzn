@@ -6,7 +6,7 @@ predicate envy_free() =
 array[${AGENTS_ARRAY}, ${AGENTS_ARRAY}] of var int: envy_matrix; 
 constraint forall (i, j in ${AGENTS_ARRAY}) (
        envy_matrix[i,j] = if i == j then 0 else 
-                            bool2int( ${SHARE_UTIL_AGENT}(i, ${SHARE_FUNCTION}(i)) >= ${SHARE_UTIL_AGENT}(i, ${SHARE_FUNCTION}(j)) )
+                            bool2int( ${SHARE_UTIL_AGENT}(i, ${SHARE_FUNCTION}(i)) < ${SHARE_UTIL_AGENT}(i, ${SHARE_FUNCTION}(j)) )
                           endif
   );
 var int: envy_pairs; 

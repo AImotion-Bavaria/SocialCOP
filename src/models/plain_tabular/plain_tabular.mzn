@@ -5,8 +5,8 @@
 % ------------------------------------------------
 % We shall use it to test various solution runners 
 include "table.mzn";
-
-set of int: Agents = 1..4;
+int: n_agents;
+set of int: Agents = 1..n_agents;
 array[Agents] of var 0..100: utilities;
 
 constraint table(utilities, 

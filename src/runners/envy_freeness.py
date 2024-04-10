@@ -9,12 +9,8 @@ from string import Template
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 
-from util.social_mapping_reader import read_social_mapping, AGENTS_ARRAY, SHARE_UTIL_AGENT, SHARE_FUNCTION
+from util.social_mapping_reader import read_social_mapping, get_substitution_dictionary, AGENTS_ARRAY, SHARE_UTIL_AGENT, SHARE_FUNCTION
 from util.mzn_debugger import create_debug_folder, log_and_debug_generated_files
-
-AGENTS_ARRAY_MIXIN = "AGENTS_ARRAY"
-SHARE_UTIL_AGENT_MIXIN = "SHARE_UTIL_AGENT"
-SHARE_FUNCTION_MIXIN = "SHARE_FUNCTION"
 
 def add_envy_freeness_mixin(social_mapper, instance : Instance):
     # That's roughly what the mixin template looks like:
@@ -31,9 +27,7 @@ def add_envy_freeness_mixin(social_mapper, instance : Instance):
     # TODO test if model is amenable to fair division (needs share function and share util specified)
     envy_free_mixin_template_file = os.path.join(os.path.dirname(__file__), '../models/envy_freeness_mixin_template.mzn')
     envy_free_mixin_template = Template(Path(envy_free_mixin_template_file).read_text())
-    sub_dict = {AGENTS_ARRAY_MIXIN : social_mapper[AGENTS_ARRAY],
-                SHARE_FUNCTION_MIXIN : social_mapper[SHARE_FUNCTION],
-                SHARE_UTIL_AGENT_MIXIN : social_mapper[SHARE_UTIL_AGENT]}
+    sub_dict = get_substitution_dictionary(social_mapper)
     envy_free_mixin = envy_free_mixin_template.substitute(sub_dict)
     logging.info(envy_free_mixin)
     instance.add_string(envy_free_mixin)
@@ -43,7 +37,6 @@ def optimize_envy(instance : Instance):
 
 def enforce_envy_freeness(instance : Instance):
     instance.add_string(f"\nconstraint envy_free();\n")
-
 
 if __name__ == "__main__":    
     logging.basicConfig(level=logging.INFO)

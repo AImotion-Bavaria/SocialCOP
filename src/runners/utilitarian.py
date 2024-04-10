@@ -13,7 +13,7 @@ def add_utilitarian_objective(social_mapper, instance : Instance):
     instance.add_string(f"var int: {UTILITARIAN_OBJECTIVE};")
     instance.add_string(f"constraint {UTILITARIAN_OBJECTIVE} = sum({social_mapper[UTILITY_ARRAY]});")
 
-def  optimize_utilitarian_objective(instance : Instance):
+def optimize_utilitarian_objective(instance : Instance):
     instance.add_string(f"solve maximize {UTILITARIAN_OBJECTIVE};")
 
 def get_better_utilitarian(instance : Instance, res : Result):

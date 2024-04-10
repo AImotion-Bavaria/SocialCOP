@@ -1,72 +1,79 @@
 from simple_runner import SimpleRunner
 from minizinc import Model, Solver, Instance, Status
 import sys 
-import os
-
-
-sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
+import os 
+import logging
 from functools import partial
+from string import Template
+from pathlib import Path
+sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 
-from util.social_mapping_reader import read_social_mapping, AGENTS_ARRAY, UTILITY_ARRAY, NUM_AGENTS
+from util.social_mapping_reader import read_social_mapping, AGENTS_ARRAY, UTILITY_ARRAY, NUM_AGENTS, get_substitution_dictionary
+from util.mzn_debugger import create_debug_folder, log_and_debug_generated_files
+
+PREVIOUS_UTILITIES = "previous_utilities"
 
 
-def add_pareto_objective(social_mapper, instance : Instance):
-    #instance.add_string(f"int: m = card(index_set_1of2(possible_solutions));")
-    #instance.add_string(f"constraint not exists(j in 1..m) (sum(i in 1..{social_mapper[NUM_AGENTS]}) (bool2int(utilities[i] == possible_solutions[j, i]))+sum(i in 1..{social_mapper[NUM_AGENTS]}) (bool2int(utilities[i] < possible_solutions[j, i]))=={social_mapper[NUM_AGENTS]}/\ sum(i in 1..{social_mapper[NUM_AGENTS]}) (bool2int(utilities[i] < possible_solutions[j, i]))>0);")
-    true = 1
+def add_pareto_mixin(social_mapper, instance : Instance):
+    pareto_mixin_template_file = os.path.join(os.path.dirname(__file__), '../models/pareto_mixin_template.mzn')
+    pareto_mixin_template = Template(Path(pareto_mixin_template_file).read_text())
+    sub_dict = get_substitution_dictionary(social_mapper)
+    pareto_mixin = pareto_mixin_template.substitute(sub_dict)
+    logging.info(pareto_mixin)
+    instance.add_string(pareto_mixin)
 
-def optimize_pareto_objective(social_mapper, instance : Instance):
-    res = instance.solve()
-    previous_solutions = [res["utilities"]]
-    print(res.solution)
-    while res.status == Status.SATISFIED:
-        with instance.branch() as child:
-            child.add_string(f"int: m = {len(previous_solutions)};")
-            child.add_string(f"array[int, int] of int: previous_solutions = {convert_to_minizinc_syntax(previous_solutions)};")
-            child.add_string(f"constraint not exists(j in 1..m) (forall(i in 1..{social_mapper[NUM_AGENTS]}) (utilities[i] = previous_solutions[j, i]));")
-            child.add_string(f"constraint not exists(j in 1..m) (sum(i in 1..{social_mapper[NUM_AGENTS]}) (bool2int(utilities[i] == previous_solutions[j, i]))+sum(i in 1..{social_mapper[NUM_AGENTS]}) (bool2int(utilities[i] < previous_solutions[j, i]))=={social_mapper[NUM_AGENTS]}/\ sum(i in 1..{social_mapper[NUM_AGENTS]}) (bool2int(utilities[i] < previous_solutions[j, i]))>0);")
-            res = child.solve()
-            if res.solution is not None:
-                print(previous_solutions)
-                new_solution = res["utilities"]
-                for result in previous_solutions:
-                    counter = 0
-                    for agent in range (len(result)):
-                        if result[agent]<=new_solution[agent]:
-                            counter+=1
-                    if counter == len(result):
-                        previous_solutions.remove(result)
-                previous_solutions.append(res["utilities"])
-    counter=0            
-    print("previous_solutions="+str(previous_solutions))
-    return previous_solutions
-
-def convert_to_minizinc_syntax(array):
-    return_value="["
-    for row in array:
-        return_value+="|"+", ".join(str(entry) for entry in row)
-    return_value+="|]"
-    return return_value
-    
-    
-'''
-A utilitarian runner maximizes the sum of utilities; 
-it therefore needs to plugin a new objective to the base model
-'''
-class ProportionalityRunner(SimpleRunner):
+class ParetoRunner(SimpleRunner):
     def __init__(self, social_mapping) -> None:
-        super().__init__()
-        self.social_mapping = social_mapping
-        pass
+        super().__init__(social_mapping)
+        self.add_presolve_handler(partial(add_pareto_mixin, social_mapping))
 
     def run(self, model, solver=...):
         self.model = model
         return super().run(model, solver)
     
+    def solve(self, instance: Instance):
+        # we need an empty list of previous utilities to begin with
+        with instance.branch() as child:
+            child[PREVIOUS_UTILITIES] = []
+            res = child.solve()
+        previous_utilities = [res[self.social_mapping[UTILITY_ARRAY]]]
+        previous_solutions = [res] # the actual solutions might be important, too
+        logging.info(previous_utilities)
+        i = 0
 
-if __name__ == "__main__":
-    import os
-    plain_tabular_model = Model(os.path.join(os.path.dirname(__file__), '../models/plain_tabular/plain_tabular.mzn'))
+        while res.status == Status.SATISFIED:
+            with instance.branch() as child:
+               child[PREVIOUS_UTILITIES] = previous_utilities
+               if self.debug:  
+                    log_and_debug_generated_files(child, "pareto_runner", i)
+               res = child.solve()
+               if res.solution is not None:
+                    logging.info(previous_utilities)
+                    new_utilities = res[self.social_mapping[UTILITY_ARRAY]]
+                    for solution_index, prev_sol_utils in enumerate(previous_utilities):
+                        counter = 0
+                        # compare two utility vectors, e.g. [2,5,7] is pareto-dominated by [2, 6, 9]
+                        for prev_sol_utility, new_utility in zip (prev_sol_utils, new_utilities):
+                            if prev_sol_utility <= new_utility:
+                                counter += 1
+                        if counter == len(prev_sol_utils): # less than or equal for all agents -> previous solution is dominated
+                            del previous_utilities[solution_index]
+                            del previous_solutions[solution_index]
+
+                    previous_utilities.append(res[self.social_mapping[UTILITY_ARRAY]])
+                    previous_solutions.append(res)
+            i += 1
+        logging.info(f"Previous utilities: {previous_utilities}")
+        #logging.info(f"Previous solutions: {previous_solutions}")
+        return previous_utilities, previous_solutions
+
+
+if __name__ == "__main__":    
+    logging.basicConfig(level=logging.INFO)
+    debug_dir = create_debug_folder(os.path.dirname(__file__))
+    plain_tabular_model = Model()
+    plain_tabular_model_file = os.path.join(os.path.dirname(__file__), '../models/plain_tabular/plain_tabular.mzn')
+    plain_tabular_model.add_file(plain_tabular_model_file, parse_data=True)
     plain_tabular_model.add_file(os.path.join(os.path.dirname(__file__), '../models/plain_tabular/plain_tabular.dzn'), parse_data=True)
     gecode = Solver.lookup("gecode")
     
@@ -74,14 +81,7 @@ if __name__ == "__main__":
     social_mapping_file = os.path.join(os.path.dirname(__file__), '../models/plain_tabular/social_mapping.json')
     social_mapping = read_social_mapping(social_mapping_file)
 
-
-    simple_runner = ProportionalityRunner(social_mapping)
-    simple_runner.add_presolve_handler(partial(add_pareto_objective, social_mapping))
-    simple_runner.add_presolve_handler(partial(optimize_pareto_objective, social_mapping))
-    #simple_runner.add_presolve_handler(partial(add_utilitarian_objective, social_mapping))
-    #simple_runner.add_presolve_handler(optimize_utilitarian_objective)
-    result = simple_runner.run(plain_tabular_model, gecode)
-    print(result)
-
-
-
+    pareto_runner = ParetoRunner(social_mapping)
+    pareto_runner.debug = True
+    pareto_runner.debug_dir = debug_dir
+    result = pareto_runner.run(plain_tabular_model, gecode)
