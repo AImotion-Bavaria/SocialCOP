@@ -15,14 +15,6 @@ def add_rawls_objective(social_mapper, instance : Instance):
 def  optimize_rawls_objective(instance : Instance):
     instance.add_string(f"solve maximize {RAWLS_OBJECTIVE};")
     
-'''
-A utilitarian runner maximizes the sum of utilities; 
-it therefore needs to plugin a new objective to the base model
-'''
-class RawlsRunner(SimpleRunner):
-    def __init__(self, social_mapping) -> None:
-        super().__init__()
-        self.social_mapping = social_mapping
 
 if __name__ == "__main__":
     import os
@@ -35,7 +27,7 @@ if __name__ == "__main__":
     social_mapping = read_social_mapping(social_mapping_file)
 
 
-    simple_runner = RawlsRunner(social_mapping)
+    simple_runner = SimpleRunner(social_mapping)
     simple_runner.add_presolve_handler(partial(add_rawls_objective, social_mapping))
     simple_runner.add_presolve_handler(optimize_rawls_objective)
     result = simple_runner.run(plain_tabular_model, gecode)

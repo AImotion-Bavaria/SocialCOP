@@ -15,15 +15,6 @@ def add_utilitarian_objective(social_mapper, instance : Instance):
 def  optimize_utilitarian_objective(instance : Instance):
     instance.add_string(f"solve maximize {UTILITARIAN_OBJECTIVE};")
     
-'''
-A utilitarian runner maximizes the sum of utilities; 
-it therefore needs to plugin a new objective to the base model
-'''
-class UtilitarianRunner(SimpleRunner):
-    def __init__(self) -> None:
-        super().__init__()
-        pass
-
 if __name__ == "__main__":
     import os
     social_selection_model = Model(os.path.join(os.path.dirname(__file__), '../models/social_selection/social_selection.mzn'))
@@ -39,7 +30,7 @@ if __name__ == "__main__":
     social_mapping_file = os.path.join(os.path.dirname(__file__), '../models/social_selection/social_mapping.json')
     social_mapping = read_social_mapping(social_mapping_file)
 
-    simple_runner = UtilitarianRunner()
+    simple_runner = SimpleRunner()
     # insert all decision variables to calculate the utilitarian objective for this model
     simple_runner.add_presolve_handler(partial(add_utilitarian_objective, social_mapping))
     # actually optimize for the utilitarian objective
