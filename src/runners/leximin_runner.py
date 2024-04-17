@@ -25,6 +25,7 @@ def add_leximin_mixin(social_mapper, instance : Instance):
 class LeximinRunner(SimpleRunner):
     def __init__(self, social_mapping) -> None:
         super().__init__(social_mapping)
+        self.add_presolve_handler(partial(add_leximin_mixin, social_mapping))
 
     def run(self, model, solver=...):
         self.model = model
@@ -32,7 +33,7 @@ class LeximinRunner(SimpleRunner):
     
     def solve(self, child: Instance):
         # have to ask the model, otherwise the parameter might not get passed to the child instance
-        num_agents = self.model[social_mapping[NUM_AGENTS]]
+        num_agents = self.model[self.social_mapping[NUM_AGENTS]]
 
         # gets initialized to be empty, updated with minimal values as we go
         maxmin_values = []
@@ -70,6 +71,6 @@ if __name__ == "__main__":
     simple_runner = LeximinRunner(social_mapping)
     simple_runner.debug = True
     simple_runner.debug_dir = debug_dir
-    simple_runner.add_presolve_handler(partial(add_leximin_mixin, social_mapping))
+    
     result = simple_runner.run(plain_tabular_model, gecode)
     print(result)

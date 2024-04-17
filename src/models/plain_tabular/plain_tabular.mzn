@@ -26,4 +26,4 @@ constraint forall(i in Agents) (drawn_solution[i+1] = utilities[i]);
 
 ann: deterministic_search = int_search([solution_index], input_order, indomain_min, complete);
 
-solve :: deterministic_search satisfy;
+%solve :: deterministic_search satisfy;

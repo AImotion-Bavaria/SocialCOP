@@ -1,5 +1,6 @@
 {
     "agents_array" : "Agents",
+    "num_agents" : "n_agents",
     "utility_array" : "utils",
     "main_variables": ["assigned_to"],
     "share_function" : "share_for",

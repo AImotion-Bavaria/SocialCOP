@@ -1,7 +1,8 @@
 % Table with opt
 enum Days = {Mon, Tue, Wed, Thu, Fri};
 enum Tables = {Table1, Table2};
-set of int: Agents;
+int: n_agents; 
+set of int: Agents = 1..n_agents;
 
 % Assignment of a table can be optional - some agents may not get a table at all
 array[Agents, Days] of var opt Tables: assigned;
