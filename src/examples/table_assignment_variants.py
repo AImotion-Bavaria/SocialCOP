@@ -1,0 +1,62 @@
+""" table_assignment_variants.py
+This file shows different use cases with the table assgiment core model
+1. Simply maximize the utilitarian welfare
+2. Look for all pareto optimal solutions
+3. Get the leximin solution
+4. Post envy-freeness and compare utilitarian / leximin
+"""
+import sys 
+import os 
+import logging
+from functools import partial
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '../runners'))
+
+from simple_runner import SimpleRunner
+from minizinc import Model, Solver, Instance
+from utilitarian import add_utilitarian_objective, optimize_utilitarian_objective
+from envy_freeness import add_envy_freeness_mixin, optimize_envy
+
+from util.social_mapping_reader import read_social_mapping, get_substitution_dictionary, AGENTS_ARRAY, SHARE_UTIL_AGENT, SHARE_FUNCTION
+from util.mzn_debugger import create_debug_folder, log_and_debug_generated_files
+
+def maximize_utilitarian_welfare(model : Model, solver : Solver):
+    logging.info("Maximizing utilitarian welfare ...")
+    simple_runner = SimpleRunner(social_mapping)
+    simple_runner.debug = True
+    simple_runner.debug_dir = debug_dir
+
+    simple_runner.add_presolve_handler(partial(add_utilitarian_objective, social_mapping))
+    simple_runner.add_presolve_handler(optimize_utilitarian_objective)
+
+    result = simple_runner.run(table_assignment_model, gecode)
+    print(result) 
+
+def minimize_envy(model : Model, solver : Solver):
+    logging.info("Minimizing envy ...")
+    simple_runner = SimpleRunner(social_mapping)
+    simple_runner.debug = True
+    simple_runner.debug_dir = debug_dir
+
+    simple_runner.add_presolve_handler(partial(add_envy_freeness_mixin, social_mapping))
+    simple_runner.add_presolve_handler(optimize_envy)
+
+    result = simple_runner.run(table_assignment_model, gecode)
+    print(result) 
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    debug_dir = create_debug_folder(os.path.dirname(__file__))
+    table_assignment_model = Model(os.path.join(os.path.dirname(__file__), '../models/table_assignment/table_assignment_generic.mzn'))
+    table_assignment_model.add_file(os.path.join(os.path.dirname(__file__), '../models/table_assignment/data/generic_1.dzn'), parse_data=True)
+    gecode = Solver.lookup("gecode")
+    
+    # now let's read the social mapping file 
+    social_mapping_file = os.path.join(os.path.dirname(__file__), '../models/table_assignment/social_mapping.json')
+    social_mapping = read_social_mapping(social_mapping_file)
+
+    # 1. Simply maximize the utilitarian welfare
+    maximize_utilitarian_welfare(table_assignment_model, gecode)
+
+    # 2. Minimize envy
+    minimize_envy(table_assignment_model, gecode)

@@ -1,0 +1,7 @@
+{
+    "agents_array" : "Agents",
+    "utility_array" : "utilities",
+    "main_variables": ["assigned"],
+    "share_function" : "get_assigned_for",
+    "share_utility" : "share_utility"
+}
