@@ -13,12 +13,12 @@ from functools import partial
 sys.path.append(os.path.join(os.path.dirname(__file__), '../runners'))
 
 from simple_runner import SimpleRunner
-from minizinc import Model, Solver, Instance
+from minizinc import Model, Solver
 from utilitarian import add_utilitarian_objective, optimize_utilitarian_objective
-from envy_freeness import add_envy_freeness_mixin, optimize_envy
+from envy_freeness import add_envy_freeness_mixin, optimize_envy, enforce_envy_freeness
 
-from util.social_mapping_reader import read_social_mapping, get_substitution_dictionary, AGENTS_ARRAY, SHARE_UTIL_AGENT, SHARE_FUNCTION
-from util.mzn_debugger import create_debug_folder, log_and_debug_generated_files
+from util.social_mapping_reader import read_social_mapping
+from util.mzn_debugger import create_debug_folder
 
 def maximize_utilitarian_welfare(model : Model, solver : Solver):
     logging.info("Maximizing utilitarian welfare ...")
@@ -26,6 +26,20 @@ def maximize_utilitarian_welfare(model : Model, solver : Solver):
     simple_runner.debug = True
     simple_runner.debug_dir = debug_dir
 
+    simple_runner.add_presolve_handler(partial(add_utilitarian_objective, social_mapping))
+    simple_runner.add_presolve_handler(optimize_utilitarian_objective)
+
+    result = simple_runner.run(table_assignment_model, gecode)
+    print(result) 
+
+def maximize_utilitarian_welfare_envyfree(model : Model, solver : Solver):
+    logging.info("Maximizing utilitarian welfare ...")
+    simple_runner = SimpleRunner(social_mapping)
+    simple_runner.debug = True
+    simple_runner.debug_dir = debug_dir
+
+    simple_runner.add_presolve_handler(partial(add_envy_freeness_mixin, social_mapping))
+    simple_runner.add_presolve_handler(enforce_envy_freeness)
     simple_runner.add_presolve_handler(partial(add_utilitarian_objective, social_mapping))
     simple_runner.add_presolve_handler(optimize_utilitarian_objective)
 
@@ -60,3 +74,6 @@ if __name__ == "__main__":
 
     # 2. Minimize envy
     minimize_envy(table_assignment_model, gecode)
+
+    # 3. Enforce envy-freeness, maximize utilitarian
+    maximize_utilitarian_welfare_envyfree(table_assignment_model, gecode)

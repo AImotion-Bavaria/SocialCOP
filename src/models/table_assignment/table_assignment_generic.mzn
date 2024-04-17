@@ -13,7 +13,7 @@ constraint forall(d in Days) (alldifferent([assigned[a, d] | a in Agents]));
 % ----------------------------------------------
 % A util function to "slice out" the assignment of some agent of the overall assignment
 % for better readability
-function array[Days] of var opt Tables: get_assigned_for(Agents: a) = 
+function array[Days] of var opt Tables: get_assigned_for(Agents: a) :: promise_total = 
 let {
   array[Days] of var opt Tables: assigned_for_a;
   constraint assigned_for_a = [assigned[a, d] | d in Days]
@@ -65,13 +65,11 @@ array[Agents] of bool: wanted_breaks;
 array[Agents] of set of Agents: desired_partners;
 
 % ----------------------------------------------
-% Now the actual utility functions 
-function var int: share_utility(Agents: a, array[Days] of var opt Tables: assigned_for_agent) =
-let {
-  int: nScs = card(wanted_days[a]) + card(wanted_number_days[a]);
-  set of int: softConstraints = 1..nScs;
-  array[softConstraints] of var bool: sat; 
-  
+% Now the actual utility functions
+% functions are marked as promise_total since they need to be used in a reified context 
+% (where an expression could be true or false) 
+function var int: share_utility(Agents: a, array[Days] of var opt Tables: assigned_for_agent) :: promise_total =
+let { 
   % 1: the wanted days 
   var int: wanted_days_satisfaction;
   constraint wanted_days_satisfaction = sum( w in wanted_days[a]) ( wants_some_day(assigned_for_agent, w));
