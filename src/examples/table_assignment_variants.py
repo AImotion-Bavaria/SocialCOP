@@ -8,7 +8,6 @@ This file shows different use cases with the table assgiment core model
 import sys 
 import os 
 import logging
-from functools import partial
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../runners'))
 
@@ -28,7 +27,7 @@ def maximize_utilitarian_welfare(model : Model, solver : Solver, social_mapping)
     simple_runner.debug = True
     simple_runner.debug_dir = debug_dir
 
-    simple_runner.add_presolve_handler(partial(add_utilitarian_objective, social_mapping))
+    simple_runner.add_presolve_handler(add_utilitarian_objective)
     simple_runner.add_presolve_handler(optimize_utilitarian_objective)
 
     result = simple_runner.run(table_assignment_model, gecode)
@@ -41,9 +40,9 @@ def maximize_utilitarian_welfare_envyfree(model : Model, solver : Solver, social
     simple_runner.debug = True
     simple_runner.debug_dir = debug_dir
 
-    simple_runner.add_presolve_handler(partial(add_envy_freeness_mixin, social_mapping))
+    simple_runner.add_presolve_handler(add_envy_freeness_mixin)
     simple_runner.add_presolve_handler(enforce_envy_freeness)
-    simple_runner.add_presolve_handler(partial(add_utilitarian_objective, social_mapping))
+    simple_runner.add_presolve_handler(add_utilitarian_objective)
     simple_runner.add_presolve_handler(optimize_utilitarian_objective)
 
     result = simple_runner.run(table_assignment_model, gecode)
@@ -56,8 +55,7 @@ def minimize_envy(model : Model, solver : Solver, social_mapping):
     simple_runner.debug = True
     simple_runner.debug_dir = debug_dir
 
-    simple_runner.add_presolve_handler(partial(add_envy_freeness_mixin, social_mapping))
-    
+    simple_runner.add_presolve_handler(add_envy_freeness_mixin)
     simple_runner.add_presolve_handler(optimize_envy)
 
     result = simple_runner.run(table_assignment_model, gecode)

@@ -3,7 +3,6 @@ from minizinc import Model, Solver, Instance
 import sys 
 import os 
 import logging
-from functools import partial
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 
@@ -17,7 +16,7 @@ MAXMIN_AGENTS = "maxmin_agents"
 NEXT_WORST_UTIL = "next_worst_util"
 NEXT_WORST_AGENT = "next_worst_agent"
 
-def add_leximin_mixin(social_mapper, instance : Instance):
+def add_leximin_mixin(instance : Instance, social_mapper):
     instance.add_file(os.path.join(os.path.dirname(__file__), '../models/leximin_mixin.mzn'))
     instance.add_string(f"{LEXIMIN_AGENTS_PLACEHOLDER} = {social_mapper[AGENTS_ARRAY]};\n")
     instance.add_string(f"{LEXIMIN_UTILITIES_PLACEHOLDER} = {social_mapper[UTILITY_ARRAY]};\n")
@@ -25,7 +24,7 @@ def add_leximin_mixin(social_mapper, instance : Instance):
 class LeximinRunner(SimpleRunner):
     def __init__(self, social_mapping) -> None:
         super().__init__(social_mapping)
-        self.add_presolve_handler(partial(add_leximin_mixin, social_mapping))
+        self.add_presolve_handler(add_leximin_mixin)
 
     def run(self, model, solver=...):
         self.model = model

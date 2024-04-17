@@ -14,7 +14,7 @@ from util.mzn_debugger import create_debug_folder, log_and_debug_generated_files
 PREVIOUS_UTILITIES = "previous_utilities"
 
 
-def add_pareto_mixin(social_mapper, instance : Instance):
+def add_pareto_mixin(instance : Instance, social_mapper):
     pareto_mixin_template_file = os.path.join(os.path.dirname(__file__), '../models/pareto_mixin_template.mzn')
     pareto_mixin_template = Template(Path(pareto_mixin_template_file).read_text())
     sub_dict = get_substitution_dictionary(social_mapper)
@@ -25,7 +25,7 @@ def add_pareto_mixin(social_mapper, instance : Instance):
 class ParetoRunner(SimpleRunner):
     def __init__(self, social_mapping) -> None:
         super().__init__(social_mapping)
-        self.add_presolve_handler(partial(add_pareto_mixin, social_mapping))
+        self.add_presolve_handler(add_pareto_mixin)
 
     def run(self, model, solver=...):
         self.model = model

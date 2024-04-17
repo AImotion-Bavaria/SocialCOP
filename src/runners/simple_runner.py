@@ -8,7 +8,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 from util.mzn_debugger import create_debug_folder, log_and_debug_generated_files
 
 class SimpleRunner:
-    def __init__(self, social_mapping = None) -> None:
+    def __init__(self, social_mapping) -> None:
         self.presolve_handlers = [] # a list of functions applied before solving
         self.debug = False
         self.debug_dir = None
@@ -41,7 +41,7 @@ class SimpleRunner:
 
     def presolve_hook(self, instance):
         for handler in self.presolve_handlers:
-            handler(instance)
+            handler(instance, self.social_mapping)
 
 
 if __name__ == "__main__":

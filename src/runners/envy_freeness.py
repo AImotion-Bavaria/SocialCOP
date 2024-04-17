@@ -4,7 +4,6 @@ import sys
 import os 
 import logging
 from pathlib import Path
-from functools import partial
 from string import Template
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
@@ -12,7 +11,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 from util.social_mapping_reader import read_social_mapping, get_substitution_dictionary, AGENTS_ARRAY, SHARE_UTIL_AGENT, SHARE_FUNCTION
 from util.mzn_debugger import create_debug_folder, log_and_debug_generated_files
 
-def add_envy_freeness_mixin(social_mapper, instance : Instance):
+def add_envy_freeness_mixin(instance : Instance, social_mapper):
     # That's roughly what the mixin template looks like:
 
     # predicate envy_free() =
@@ -32,10 +31,10 @@ def add_envy_freeness_mixin(social_mapper, instance : Instance):
     # logging.info(envy_free_mixin)
     instance.add_string(envy_free_mixin)
 
-def optimize_envy(instance : Instance):
+def optimize_envy(instance : Instance, social_mapper = None):
     instance.add_string(f"\nsolve minimize envy_pairs;\n")
 
-def enforce_envy_freeness(instance : Instance):
+def enforce_envy_freeness(instance : Instance, social_mapper = None):
     instance.add_string(f"\nconstraint envy_free();\n")
 
 if __name__ == "__main__":    
@@ -54,7 +53,7 @@ if __name__ == "__main__":
     simple_runner = SimpleRunner(social_mapping)
     simple_runner.debug = True
     simple_runner.debug_dir = debug_dir
-    simple_runner.add_presolve_handler(partial(add_envy_freeness_mixin, social_mapping))
+    simple_runner.add_presolve_handler(add_envy_freeness_mixin)
     simple_runner.add_presolve_handler(optimize_envy)
 
     result = simple_runner.run(plain_tabular_model, gecode)
