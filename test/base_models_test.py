@@ -42,7 +42,6 @@ class BaseModelsTest(unittest.TestCase):
         model = Model(os.path.join(os.path.dirname(__file__), "../src/models/photo_placement/photo_placement.mzn")) 
         data = os.path.join(os.path.dirname(__file__), "../src/models/photo_placement/data/4.dzn")
         model.add_file(data)        
-        model.add_string("old_solutions = [];")
         result = self.simple_runner.run(model)
         self.assertIsNotNone(result)
 

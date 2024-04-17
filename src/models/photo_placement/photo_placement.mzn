@@ -8,7 +8,6 @@
 %
 %-----------------------------------------------------------------------------
 include "globals.mzn";
-include "../simple_diversity_mixin.mzn";
 %-----------------------------------------------------------------------------
 % Specification
 
@@ -48,5 +47,5 @@ constraint forall(a in AGENTS)
 % solve satisfy;
 % var 0..2*n_agents: social_welfare;
 % constraint social_welfare = sum(util_per_agent);
-diversity_variables_of_interest = position_of_agent     
+% diversity_variables_of_interest = position_of_agent     
 % solve maximize social_welfare;

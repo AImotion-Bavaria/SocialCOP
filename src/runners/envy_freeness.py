@@ -29,7 +29,7 @@ def add_envy_freeness_mixin(social_mapper, instance : Instance):
     envy_free_mixin_template = Template(Path(envy_free_mixin_template_file).read_text())
     sub_dict = get_substitution_dictionary(social_mapper)
     envy_free_mixin = envy_free_mixin_template.substitute(sub_dict)
-    logging.info(envy_free_mixin)
+    # logging.info(envy_free_mixin)
     instance.add_string(envy_free_mixin)
 
 def optimize_envy(instance : Instance):

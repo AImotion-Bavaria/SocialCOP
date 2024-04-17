@@ -108,7 +108,7 @@ in
 ;
 
 % hard work from home constraints
-int: max_wfh_days = 2;
+int: max_wfh_days; % = 2;
 include "count_leq.mzn";
 constraint forall(a in Agents) (
   sum(d in Days) (absent(assigned[a, d])) <= max_wfh_days
@@ -117,4 +117,4 @@ constraint forall(a in Agents) (
 array[Agents] of var int: utilities;
 constraint utilities = [share_utility(a, get_assigned_for(a)) + global_utility(a) | a in Agents];
 
-% solve maximize sum(utilities);
+%solve maximize sum(utilities);
