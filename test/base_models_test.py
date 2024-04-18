@@ -73,7 +73,7 @@ class BaseModelsTest(unittest.TestCase):
 
     def test_bus_tour(self):
         model = Model(os.path.join(os.path.dirname(__file__), "../src/models/bus_tour/bus_tour.mzn")) 
-        data = os.path.join(os.path.dirname(__file__), "../src/models/bus_tour/bus_tour_1.dzn")
+        data = os.path.join(os.path.dirname(__file__), "../src/models/bus_tour/data/bus_tour_1.dzn")
         model.add_file(data)
         social_mapping_file = os.path.join(os.path.dirname(__file__), '../src/models/bus_tour/social_mapping.json')
         social_mapping = read_social_mapping(social_mapping_file)

@@ -5,6 +5,7 @@
 from minizinc import Instance, Model, Solver
 import sys, os
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
+from util.social_mapping_reader import read_social_mapping
 from util.mzn_debugger import create_debug_folder, log_and_debug_generated_files
 
 class SimpleRunner:
@@ -46,13 +47,14 @@ class SimpleRunner:
 
 if __name__ == "__main__":
     import os
-    hello_social_model = os.path.join(os.path.dirname(__file__), '../mzn_playground/hello_social_cop.mzn')
-    hello_social_data = os.path.join(os.path.dirname(__file__), '../mzn_playground/test1.dzn')
+    hello_social_model = os.path.join(os.path.dirname(__file__), '../models/plain_tabular/plain_tabular.mzn')
+    hello_social_data = os.path.join(os.path.dirname(__file__), '../models/plain_tabular/plain_tabular.dzn')
     simple_agents = Model(hello_social_model)
     simple_agents.add_file(hello_social_data)
     # Find the MiniZinc solver configuration for Gecode
     gecode = Solver.lookup("gecode")
-    
-    simple_runner = SimpleRunner()
+    social_mapping_file = os.path.join(os.path.dirname(__file__), '../models/plain_tabular/social_mapping.json')
+    social_mapping = read_social_mapping(social_mapping_file)
+    simple_runner = SimpleRunner(social_mapping)
     result = simple_runner.run(simple_agents, gecode)
-    print(result["selected"])
+    print(result)

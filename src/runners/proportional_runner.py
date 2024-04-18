@@ -3,7 +3,7 @@ from minizinc import Model, Solver, Instance
 import sys 
 import os
 
-from utilitarian_runner import add_utilitarian_objective, optimize_utilitarian_objective 
+#from utilitarian_runner import add_utilitarian_objective, optimize_utilitarian_objective 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 from functools import partial
 
@@ -27,7 +27,7 @@ it therefore needs to plugin a new objective to the base model
 '''
 class ProportionalityRunner(SimpleRunner):
     def __init__(self, social_mapping) -> None:
-        super().__init__()
+        super().__init__(social_mapping)
         self.social_mapping = social_mapping
         pass
 
@@ -48,10 +48,10 @@ if __name__ == "__main__":
 
 
     simple_runner = ProportionalityRunner(social_mapping)
-    simple_runner.add_presolve_handler(partial(add_proportionality_objective, social_mapping))
-    simple_runner.add_presolve_handler(optimize_proportionality_objective)
-    simple_runner.add_presolve_handler(partial(add_utilitarian_objective, social_mapping))
-   # simple_runner.add_presolve_handler(optimize_utilitarian_objective)
+    simple_runner.add_presolve_handler(add_proportionality_objective, social_mapping)
+    simple_runner.add_presolve_handler(optimize_proportionality_objective, social_mapping)
+    # simple_runner.add_presolve_handler(partial(add_utilitarian_objective, social_mapping))
+    # simple_runner.add_presolve_handler(optimize_utilitarian_objective)
     result = simple_runner.run(plain_tabular_model, gecode)
     print(result)
 
