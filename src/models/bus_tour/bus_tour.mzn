@@ -3,6 +3,7 @@
 set of int: Site;
 Site: hotel;
 array[Site,Site] of int: distance;
+int: num_sites;
 
 array[Site] of int: durationOfVisit;
 array[Site] of int: siteOpens;
@@ -36,21 +37,21 @@ set of int: Passenger;
 array[Passenger,Site] of int: site_score;
 array[Passenger] of int: preferred_n_sites;
 array[Passenger] of int: preferred_travel_time;
-array[Passenger,1..3] of int: preference_weights;
+array[Passenger,1..num_sites] of int: preference_weights;
 
-array[Passenger,1..3] of var int: passenger_scores :: add_to_output = 
-array2d(Passenger,1..3,
+array[Passenger,1..num_sites] of var int: passenger_scores :: add_to_output = 
+array2d(Passenger,1..num_sites,
 [ if i=1 then sum (s in Site where s != hotel /\ s != next[s]) (site_score[p,s])
   elseif i=2 then (preferred_n_sites[p]-abs(preferred_n_sites[p] - sum (s in Site where s != hotel) (s != next[s])))
   else min(preferred_travel_time[p] - travel_time,0)
   endif
-| p in Passenger, i in 1..3]);
+| p in Passenger, i in 1..num_sites]);
 
 array[Passenger] of var int: score ::add_to_output =
-[   preference_weights[p,1] * passenger_scores[p,1]
-  + preference_weights[p,2] * passenger_scores[p,2]
-  + preference_weights[p,3] * passenger_scores[p,3]
-  | p in Passenger ];
+[  sum([ preference_weights[p,i] * passenger_scores[p,i] | i in 1..num_sites])
+  | p in Passenger,  ];
+  
+  % for loop with num_sites?
 
 %include "../diversity_mixin.mzn";
 %array[int] of var Site: diversity_x ::add_to_output = next;

@@ -31,7 +31,7 @@ constraint forall(s in AGENTS) (
    util_per_agent[s] = p - studentRanksProjectAt[s] 
 );
 
-
+% relation of student to lecturer
 array[STUDENT] of var LECTURER: studentToLecturer;
 
 constraint forall(s in STUDENT) (studentToLecturer[s] = projectToLecturer[studentToProject[s]] );
@@ -43,11 +43,6 @@ constraint forall(s in STUDENT) (studentToLecturer[s] = projectToLecturer[studen
 int: minPerLecturer; int: maxPerLecturer;
 int: minPerProject; int: maxPerProject;
 
-% some default values for now
-minPerLecturer = 0; maxPerLecturer = 4;
-
-% some default values for now
-minPerProject = 0; maxPerProject= 3;
 
 constraint global_cardinality_low_up ( studentToLecturer, [l_ | l_ in LECTURER], [minPerLecturer | l_ in LECTURER], [maxPerLecturer | l_ in LECTURER]); 
 constraint global_cardinality_low_up ( studentToProject, [p_ | p_ in PROJECT], [minPerProject | p_ in PROJECT], [maxPerProject | p_ in PROJECT]);

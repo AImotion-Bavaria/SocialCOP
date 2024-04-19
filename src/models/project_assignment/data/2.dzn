@@ -12,3 +12,9 @@ studentProjectRanks = [| 2, 3, 4, 5, 1 |
                          4, 5, 1, 3, 2 |
                          1, 2, 5, 4, 3 |
                          3, 2, 4, 5, 1 |];
+                         
+% some default values for now
+minPerLecturer = 0; maxPerLecturer = 4;
+
+% some default values for now
+minPerProject = 0; maxPerProject= 3;
