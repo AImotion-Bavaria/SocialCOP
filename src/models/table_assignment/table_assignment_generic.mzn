@@ -1,6 +1,6 @@
 % Table with opt
 enum Days = {Mon, Tue, Wed, Thu, Fri};
-enum Tables = {Table1, Table2};
+enum Tables;
 int: n_agents; 
 set of int: Agents = 1..n_agents;
 

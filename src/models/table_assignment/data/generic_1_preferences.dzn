@@ -1,5 +1,6 @@
 n_agents = 3;
 
+Tables = {Table1, Table2};
 wanted_days = [{}, {Mon, Wed}, {Thu, Fri}];
 wanted_number_days = [{2}, {}, {3}];
 wanted_breaks = [true, true, false];
