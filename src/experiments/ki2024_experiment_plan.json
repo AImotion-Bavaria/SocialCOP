@@ -1,0 +1,36 @@
+{
+    "problems": [
+      {
+        "problem": "table_assignment",
+        "path" : "../models/table_assignment/",
+        "model": "table_assignment_generic.mzn",
+        "data": [
+          "generic_1.dzn",
+          "generic_1_preferences.dzn"
+        ]
+      },
+      {
+        "problem": "table_assignment",
+        "path" : "../models/table_assignment/",
+        "model": "table_assignment_generic.mzn",
+        "data": [
+          "generic_2.dzn",
+          "generic_2_preferences.dzn"
+        ]
+      }
+    ],
+    "solvers": [
+      "gecode",
+      "com.google.ortools.sat"
+    ],
+    "configurations": [
+      "rawls",
+      "leximin",
+      "utilitarian",
+      "leximin_pareto", 
+      "utilitarian_envy_free",
+      "envy_free", 
+      "envy_min"
+    ]
+  }
+  

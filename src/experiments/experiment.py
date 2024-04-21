@@ -1,40 +1,52 @@
-import numpy as np
+import json
+from dataclasses import dataclass
 
-
+@dataclass
 class Experiment:
-    def __init__(self, n_value, m_value, solvers, repetitions):
-        self.n_value = n_value #participants
-        self.m_value = m_value #number of goods
-        self.solvers = solvers #list of reweighting functions
-        self.repetitions = repetitions #number of repetitions
+    solver: str
+    configuration: str
+    problem: str
+    path: str
+    model_inst : tuple
 
-    #https://github.com/oliviaguest/gini/tree/master
-    def calculate_gini(self,array):
-        array = np.sort(np.array(array)) #cast to sorted numpy array
-        index = np.arange(1,array.shape[0]+1) #index per array element
-        n = array.shape[0] #number of array elements
-        return ((np.sum((2 * index - n  - 1) * array)) / (n * np.sum(array))) #Gini coefficient
+    def get_identifier(self):
+        ident = f"{self.problem}_{self.solver}_{self.configuration}_{ '_'.join(self.model_inst[1])}" 
+        ident = ident.replace(".", "_")
+        ident = ident.replace("[", "_")
+        ident = ident.replace("]", "_")
+        return ident
 
-    def test_gini(self):
-    #Test gini calculation 
-        a = np.zeros((1000)) #create array of zeros
-        a[0] = 1.0 #change first value only to 1.0
-        gini_index = self.calculate_gini(a) #as array is not equally distributed, gini should be high
-        print(f"Gini-Index Test: Should be close to 1: {gini_index:.4f}\n\n")
+    def get_result_filename(self):
+        return f"{self.get_identifier()}.pkl"
+    
+def parse_json(filename):
+    experiments = []
+    
+    with open(filename, 'r') as file:
+        data = json.load(file)
         
+        for problem_instance in data['problems']:
+            model = problem_instance['model']
+            problem = problem_instance["problem"]
+            path = problem_instance["path"]
+            data_files = problem_instance['data']
+            
+            for solver in data['solvers']:
+                for configuration in data['configurations']:
+                    experiment = Experiment(solver, configuration, problem, path, (model, data_files))
+                    experiments.append(experiment)
+                        
+    
+    return experiments
 
-    def run_experiment(self):
-        for solver in self.solvers:
-            solved = solver(self.m_value, self.n_value, self.repetitions) #solve with given reweighting function
-            gini_index = self.calculate_gini(solved)
-            color_circle(gini_index)
-            print(f"Gini-Index for {solver.__name__}: {gini_index:.4f}",color_circle(gini_index))
-        
-def color_circle(value):
-    if 0 <= value <0.33:
-        return("🟢")
-    elif 0.33 <= value <0.66:
-        return("🟡") 
-    elif 0.66 <= value <=1:
-        return("🔴") 
+if __name__ == "__main__":
+    # Example usage:
+    import os 
+    filename =  os.path.join(os.path.dirname(__file__), 'ki2024_experiment_plan.json')    
+    experiments = parse_json(filename)
 
+    # Now you have a list of Experiment instances, you can use them as needed.
+    for exp  in experiments:
+        exp : Experiment = exp
+        print(f"Solver: {exp.solver}, Configuration: {exp.configuration}, Problem: {exp.problem} Model-Inst: {exp.model_inst}")
+        print(exp.get_result_filename())
