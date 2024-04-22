@@ -2,7 +2,14 @@
     "envy_min",
     "utilitarian"
   ]
-
+  {
+    "problem": "scheduling",
+    "path" : "../models/scheduling/",
+    "model": "scheduling_core.mzn",
+    "data": [
+      "2.dzn"
+    ]
+  }
 
   {
     "problem": "table_assignment",
@@ -22,3 +29,13 @@
       "generic_2_preferences.dzn"
     ]
   }
+
+
+  {
+    "problem": "bus_tour",
+    "path" : "../models/bus_tour/",
+    "model": "bus_tour.mzn",
+    "data": [
+      "bus_tour_1.dzn"
+    ]
+  },

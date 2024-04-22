@@ -55,6 +55,3 @@ constraint score  =
   | p in Passenger,  ];
   
   % for loop with num_sites?
-
-%include "../diversity_mixin.mzn";
-%array[int] of var Site: diversity_x ::add_to_output = next;

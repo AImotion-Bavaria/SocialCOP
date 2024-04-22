@@ -26,8 +26,7 @@
     "configurations": [
       "rawls",
       "leximin",
-      "utilitarian",
-      "leximin_pareto", 
+      "utilitarian", 
       "utilitarian_envy_free",
       "envy_free", 
       "envy_min"

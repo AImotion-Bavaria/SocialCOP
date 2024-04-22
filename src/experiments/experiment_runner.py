@@ -34,6 +34,9 @@ def rawls(model: Model, social_mapping, solver: Solver):
 
 def utilitarian(model : Model, social_mapping : dict, solver : Solver):
     simple_runner = prepare_utilitarian_runner(social_mapping)
+    if SHARE_FUNCTION in social_mapping: # it is a division problem - I want to record envy counts as well
+        simple_runner.add_presolve_handler(add_envy_freeness_mixin)
+
     result = simple_runner.run(model, solver)
     return result
 
@@ -185,7 +188,7 @@ if __name__ == "__main__":
     create_database(database_name)
     print(f"Database '{database_name}' created successfully.")
 
-    filename =  os.path.join(os.path.dirname(__file__), 'test.json')    
+    filename =  os.path.join(os.path.dirname(__file__), 'bus_tour_experiments.json')    
     experiments = parse_json(filename)
 
     experiment_runner = ExperimentRunner(database_name)

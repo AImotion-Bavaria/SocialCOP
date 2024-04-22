@@ -1,32 +1,22 @@
 {
     "problems": [
       {
-        "problem": "bus_tour",
-        "path" : "../models/bus_tour/",
-        "model": "bus_tour.mzn",
+        "problem": "table_assignment",
+        "path" : "../models/table_assignment/",
+        "model": "table_assignment_generic.mzn",
         "data": [
-          "bus_tour_1.dzn"
-        ]
-      },
-      {
-        "problem": "scheduling",
-        "path" : "../models/scheduling/",
-        "model": "scheduling_core.mzn",
-        "data": [
-          "4.dzn"
+          "generic_2.dzn",
+          "generic_2_preferences.dzn"
         ]
       }
+
     ],
     "solvers": [
       "chuffed"
     ],
     "configurations": [
-      "leximin",
-      "rawls",
       "utilitarian", 
-      "utilitarian_envy_free",
-      "envy_free", 
-      "envy_min"
+      "utilitarian_envy_free"
     ]
   }
   

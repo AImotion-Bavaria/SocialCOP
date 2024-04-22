@@ -1,0 +1,30 @@
+{
+    "problems": [
+
+        {
+            "problem": "bus_tour",
+            "path" : "../models/bus_tour/",
+            "model": "bus_tour.mzn",
+            "data": [
+              "bus_tour_2.dzn"
+            ]
+          },
+          {
+            "problem": "bus_tour",
+            "path" : "../models/bus_tour/",
+            "model": "bus_tour.mzn",
+            "data": [
+              "bus_tour_1.dzn"
+            ]
+          }
+    ],
+    "solvers": [
+      "chuffed"
+    ],
+    "configurations": [
+      "leximin",
+      "rawls",
+      "utilitarian"
+    ]
+  }
+  
