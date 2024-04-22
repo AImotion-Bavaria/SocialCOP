@@ -7,6 +7,14 @@
         "data": [
           "bus_tour_1.dzn"
         ]
+      },
+      {
+        "problem": "scheduling",
+        "path" : "../models/scheduling/",
+        "model": "scheduling_core.mzn",
+        "data": [
+          "4.dzn"
+        ]
       }
     ],
     "solvers": [

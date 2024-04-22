@@ -14,7 +14,7 @@ from experiment import Experiment, parse_json
 from simple_runner import SimpleRunner
 from minizinc import Model, Solver
 from utilitarian import prepare_utilitarian_runner
-from envy_freeness import prepare_envy_free_runner, prepare_envy_min_runner, ENVY_PAIRS, add_envy_freeness_mixin, enforce_envy_freeness
+from envy_freeness import prepare_envy_free_runner, prepare_envy_min_runner, ENVY_PAIRS, add_envy_freeness_mixin, enforce_envy_freeness, SHARE_FUNCTION
 from leximin_runner import prepare_leximin_runner
 from pareto_runner import ParetoRunner
 from rawls_runner import prepare_rawls_runner
@@ -37,7 +37,11 @@ def utilitarian(model : Model, social_mapping : dict, solver : Solver):
     result = simple_runner.run(model, solver)
     return result
 
+# everything that is associated to envy-freeness has to be a division problem
 def utilitarian_envy_free(model : Model, social_mapping : dict, solver : Solver):
+    if not SHARE_FUNCTION in social_mapping: # it is not  a division problem
+        return None 
+     
     simple_runner : SimpleRunner = prepare_utilitarian_runner(social_mapping)
     simple_runner.add_presolve_handler(add_envy_freeness_mixin)
     simple_runner.add_presolve_handler(enforce_envy_freeness)
@@ -45,11 +49,15 @@ def utilitarian_envy_free(model : Model, social_mapping : dict, solver : Solver)
     return result
 
 def envy_min(model : Model, social_mapping : dict, solver : Solver):
+    if not SHARE_FUNCTION in social_mapping: # it is not  a division problem
+        return None 
     simple_runner = prepare_envy_min_runner(social_mapping)
     result = simple_runner.run(model, solver)
     return result
 
 def envy_free(model : Model, social_mapping : dict, solver : Solver):
+    if not SHARE_FUNCTION in social_mapping: # it is not  a division problem
+        return None 
     simple_runner = prepare_envy_free_runner(social_mapping)
     result = simple_runner.run(model, solver)
     return result
@@ -141,23 +149,22 @@ class ExperimentRunner:
 
         solver = Solver.lookup(experiment.solver)
 
-        # now for the configurations: 
         result = configurations_map[experiment.configuration](model, social_mapping, solver)
-        
-        utils = result[social_mapping[UTILITY_ARRAY]]
-        db_result = {"model": experiment.problem, "data_files" : "".join(experiment.model_inst[1]), 
-                     "utilities" : utils, "max_utility" : max(utils), "min_utility" : min(utils), "sum_utility" : sum(utils),
-                      "solving_runtime" : result.statistics["solveTime"].total_seconds() , 
-                      "solver" : experiment.solver, "configuration" : experiment.configuration,
-                      "envy_pairs" : result[ENVY_PAIRS] if hasattr(result.solution, ENVY_PAIRS) else None}
-        
+        if result:
+            utils = result[social_mapping[UTILITY_ARRAY]]
+            db_result = {"model": experiment.problem, "data_files" : "".join(experiment.model_inst[1]), 
+                        "utilities" : utils, "max_utility" : max(utils), "min_utility" : min(utils), "sum_utility" : sum(utils),
+                        "solving_runtime" : result.statistics["solveTime"].total_seconds() , 
+                        "solver" : experiment.solver, "configuration" : experiment.configuration,
+                        "envy_pairs" : result[ENVY_PAIRS] if hasattr(result.solution, ENVY_PAIRS) else None}
+            
 
-        # write a pickle file 
-        with open(pickle_output, 'wb') as handle:
-            pickle.dump(db_result, handle, protocol=pickle.HIGHEST_PROTOCOL)
-    
-        # write to database
-        insert_into_results(self.database_name, db_result)
+            # write a pickle file 
+            with open(pickle_output, 'wb') as handle:
+                pickle.dump(db_result, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        
+            # write to database
+            insert_into_results(self.database_name, db_result)
         return result 
     
 
