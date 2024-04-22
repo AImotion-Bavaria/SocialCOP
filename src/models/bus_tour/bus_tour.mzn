@@ -33,7 +33,8 @@ constraint forall (i in Site where i = next[i]) (
 
 var int: travel_time ::add_to_output = sum (i in Site where i != next[i]) (distance[i,next[i]]);
 
-set of int: Passenger;
+int: num_passengers;
+set of int: Passenger = 1..num_passengers;
 array[Passenger,Site] of int: site_score;
 array[Passenger] of int: preferred_n_sites;
 array[Passenger] of int: preferred_travel_time;

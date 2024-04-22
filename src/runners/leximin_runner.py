@@ -36,7 +36,6 @@ class LeximinRunner(SimpleRunner):
 
         # gets initialized to be empty, updated with minimal values as we go
         maxmin_values = []
-        updated_result = 0
         for i in range(num_agents):
             with child.branch() as inst:
                 inst[MAXMIN_VALUES] = maxmin_values
@@ -51,8 +50,11 @@ class LeximinRunner(SimpleRunner):
                 # some logging
                 logging.info(f"Currently worst-off agent {result[NEXT_WORST_AGENT]} with utility {result[NEXT_WORST_UTIL]}")
                 logging.info(f"Maxmin agents: {result[MAXMIN_AGENTS]}")
-                updated_result = result[self.social_mapping[UTILITY_ARRAY]]
-        return updated_result
+
+        return result
+
+def prepare_leximin_runner(social_mapping):
+    return LeximinRunner(social_mapping)
 
 if __name__ == "__main__":    
     logging.basicConfig(level=logging.INFO)

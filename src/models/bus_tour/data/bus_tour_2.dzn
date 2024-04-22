@@ -12,7 +12,7 @@ durationOfVisit = [20, 4, 20, 15, 12, 0];
 siteOpens = [ 4, 4, 10, 10, 40, 0];
 siteCloses = [ 70, 70, 70, 70, 70, 200 ];
 
-Passenger = { 1,2,3,4 };
+num_passengers = 4;
 site_score = [| 100, 50, 75, 0, 0, 0
               | 28, 0, 42, 0, 0, 0
               | 0, 0, 0, 12, 13, 0 

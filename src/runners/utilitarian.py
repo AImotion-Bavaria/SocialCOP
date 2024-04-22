@@ -19,6 +19,12 @@ def get_better_utilitarian(instance : Instance, res : Result, social_mapper = No
     # enforce that the next solution needs to be better than the current one
     instance.add_string(f"constraint {UTILITARIAN_OBJECTIVE} > {res[UTILITARIAN_OBJECTIVE]};")
 
+def prepare_utilitarian_runner(social_mapping):
+    simple_runner = SimpleRunner(social_mapping)
+    simple_runner.add_presolve_handler(add_utilitarian_objective)
+    simple_runner.add_presolve_handler(optimize_utilitarian_objective)
+    return simple_runner
+
 if __name__ == "__main__":
     import os
     social_selection_model = Model(os.path.join(os.path.dirname(__file__), '../models/social_selection/social_selection.mzn'))

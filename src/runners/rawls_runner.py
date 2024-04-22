@@ -14,6 +14,11 @@ def add_rawls_objective( instance : Instance, social_mapper):
 def  optimize_rawls_objective(instance : Instance, social_mapper = None):
     instance.add_string(f"solve maximize {RAWLS_OBJECTIVE};")
     
+def prepare_rawls_runner(social_mapping):
+    simple_runner = SimpleRunner(social_mapping)
+    simple_runner.add_presolve_handler(add_rawls_objective)
+    simple_runner.add_presolve_handler(optimize_rawls_objective)
+    return simple_runner
 
 if __name__ == "__main__":
     import os

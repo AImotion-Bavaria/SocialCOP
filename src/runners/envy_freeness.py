@@ -11,6 +11,8 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 from util.social_mapping_reader import read_social_mapping, get_substitution_dictionary, AGENTS_ARRAY, SHARE_UTIL_AGENT, SHARE_FUNCTION
 from util.mzn_debugger import create_debug_folder, log_and_debug_generated_files
 
+ENVY_PAIRS = "envy_pairs"
+
 def add_envy_freeness_mixin(instance : Instance, social_mapper):
     # That's roughly what the mixin template looks like:
 
@@ -32,10 +34,22 @@ def add_envy_freeness_mixin(instance : Instance, social_mapper):
     instance.add_string(envy_free_mixin)
 
 def optimize_envy(instance : Instance, social_mapper = None):
-    instance.add_string(f"\nsolve minimize envy_pairs;\n")
+    instance.add_string(f"\nsolve minimize {ENVY_PAIRS};\n")
 
 def enforce_envy_freeness(instance : Instance, social_mapper = None):
     instance.add_string(f"\nconstraint envy_free();\n")
+
+def prepare_envy_min_runner(social_mapping):
+    simple_runner = SimpleRunner(social_mapping)
+    simple_runner.add_presolve_handler(add_envy_freeness_mixin)
+    simple_runner.add_presolve_handler(optimize_envy)
+    return simple_runner
+
+def prepare_envy_free_runner(social_mapping):
+    simple_runner = SimpleRunner(social_mapping)
+    simple_runner.add_presolve_handler(add_envy_freeness_mixin)
+    simple_runner.add_presolve_handler(enforce_envy_freeness)
+    return simple_runner
 
 if __name__ == "__main__":    
     logging.basicConfig(level=logging.INFO)

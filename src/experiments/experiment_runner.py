@@ -13,10 +13,11 @@ sys.path.append(src)
 from experiment import Experiment, parse_json
 from simple_runner import SimpleRunner
 from minizinc import Model, Solver
-from utilitarian import add_utilitarian_objective, optimize_utilitarian_objective
-from envy_freeness import add_envy_freeness_mixin, optimize_envy, enforce_envy_freeness
-from leximin_runner import LeximinRunner
+from utilitarian import prepare_utilitarian_runner
+from envy_freeness import prepare_envy_free_runner, prepare_envy_min_runner, ENVY_PAIRS, add_envy_freeness_mixin, enforce_envy_freeness
+from leximin_runner import prepare_leximin_runner
 from pareto_runner import ParetoRunner
+from rawls_runner import prepare_rawls_runner
 
 from util.social_mapping_reader import read_social_mapping, UTILITY_ARRAY
 from util.mzn_debugger import create_debug_folder
@@ -27,24 +28,47 @@ result_dir = os.path.join(base_dir, 'results')
 FORCE_OVERRIDE = True  # use cached versions if false
 
 def rawls(model: Model, social_mapping, solver: Solver):
-    pass
+    simple_runner = prepare_rawls_runner(social_mapping)
+    result = simple_runner.run(model, solver)
+    return result
 
 def utilitarian(model : Model, social_mapping : dict, solver : Solver):
-    simple_runner = SimpleRunner(social_mapping)
-    simple_runner.add_presolve_handler(add_utilitarian_objective)
-    simple_runner.add_presolve_handler(optimize_utilitarian_objective)
+    simple_runner = prepare_utilitarian_runner(social_mapping)
+    result = simple_runner.run(model, solver)
+    return result
 
+def utilitarian_envy_free(model : Model, social_mapping : dict, solver : Solver):
+    simple_runner : SimpleRunner = prepare_utilitarian_runner(social_mapping)
+    simple_runner.add_presolve_handler(add_envy_freeness_mixin)
+    simple_runner.add_presolve_handler(enforce_envy_freeness)
+    result = simple_runner.run(model, solver)
+    return result
+
+def envy_min(model : Model, social_mapping : dict, solver : Solver):
+    simple_runner = prepare_envy_min_runner(social_mapping)
+    result = simple_runner.run(model, solver)
+    return result
+
+def envy_free(model : Model, social_mapping : dict, solver : Solver):
+    simple_runner = prepare_envy_free_runner(social_mapping)
+    result = simple_runner.run(model, solver)
+    return result
+
+def leximin(model: Model, social_mapping, solver: Solver):
+    simple_runner = prepare_leximin_runner(social_mapping)
+    simple_runner.debug = True
+    simple_runner.debug_dir = create_debug_folder(os.path.dirname(__file__))
     result = simple_runner.run(model, solver)
     return result
 
 configurations_map = {
       "rawls" : rawls,
-      "leximin": rawls,
+      "leximin": leximin,
       "utilitarian" : utilitarian,
       "leximin_pareto":  rawls,
-      "utilitarian_envy_free":rawls,
-      "envy_free": rawls,
-      "envy_min":rawls
+      "utilitarian_envy_free":utilitarian_envy_free,
+      "envy_free": envy_free,
+      "envy_min": envy_min
 }
 
 import sqlite3
@@ -66,7 +90,8 @@ def create_database(database_name):
                             sum_utility INTEGER,
                             solving_runtime REAL,
                             solver TEXT,
-                            configuration TEXT
+                            configuration TEXT,
+                            envy_pairs INTEGER
                         )''')
         
         conn.commit()
@@ -80,10 +105,10 @@ def insert_into_results(database_name, db_result):
         
         # Insert a new row into the Results table
         cursor.execute('''INSERT INTO Results 
-                        (timestamp, model, data_files, utility_vector, max_utility, min_utility, sum_utility, solving_runtime, solver, configuration)
-                        VALUES (CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                        (timestamp, model, data_files, utility_vector, max_utility, min_utility, sum_utility, solving_runtime, solver, configuration, envy_pairs)
+                        VALUES (CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
                         (db_result["model"], db_result["data_files"], f'{db_result["utilities"]}', db_result["max_utility"],
-                        db_result["min_utility"], db_result["sum_utility"], db_result["solving_runtime"], db_result["solver"], db_result["configuration"]))
+                        db_result["min_utility"], db_result["sum_utility"], db_result["solving_runtime"], db_result["solver"], db_result["configuration"], db_result["envy_pairs"]))
         
         conn.commit()
 
@@ -118,12 +143,15 @@ class ExperimentRunner:
 
         # now for the configurations: 
         result = configurations_map[experiment.configuration](model, social_mapping, solver)
+        
         utils = result[social_mapping[UTILITY_ARRAY]]
         db_result = {"model": experiment.problem, "data_files" : "".join(experiment.model_inst[1]), 
                      "utilities" : utils, "max_utility" : max(utils), "min_utility" : min(utils), "sum_utility" : sum(utils),
                       "solving_runtime" : result.statistics["solveTime"].total_seconds() , 
-                      "solver" : experiment.solver, "configuration" : experiment.configuration}
+                      "solver" : experiment.solver, "configuration" : experiment.configuration,
+                      "envy_pairs" : result[ENVY_PAIRS] if hasattr(result.solution, ENVY_PAIRS) else None}
         
+
         # write a pickle file 
         with open(pickle_output, 'wb') as handle:
             pickle.dump(db_result, handle, protocol=pickle.HIGHEST_PROTOCOL)
