@@ -2,6 +2,8 @@ import sys
 from os.path import dirname
 import logging
 import pickle 
+import datetime
+
 
 #Add src folder to python path
 import os
@@ -151,13 +153,16 @@ class ExperimentRunner:
             model.add_file(data_file_path, parse_data=True)
 
         solver = Solver.lookup(experiment.solver)
-
+        start_time = datetime.datetime.now()
         result = configurations_map[experiment.configuration](model, social_mapping, solver)
+        end_time = datetime.datetime.now()
+        elapsed_time = end_time - start_time
+
         if result:
             utils = result[social_mapping[UTILITY_ARRAY]]
             db_result = {"model": experiment.problem, "data_files" : "".join(experiment.model_inst[1]), 
                         "utilities" : utils, "max_utility" : max(utils), "min_utility" : min(utils), "sum_utility" : sum(utils),
-                        "solving_runtime" : result.statistics["solveTime"].total_seconds() , 
+                        "solving_runtime" : elapsed_time.total_seconds() , 
                         "solver" : experiment.solver, "configuration" : experiment.configuration,
                         "envy_pairs" : result[ENVY_PAIRS] if hasattr(result.solution, ENVY_PAIRS) else None}
             
@@ -188,7 +193,7 @@ if __name__ == "__main__":
     create_database(database_name)
     print(f"Database '{database_name}' created successfully.")
 
-    filename =  os.path.join(os.path.dirname(__file__), 'bus_tour_experiments.json')    
+    filename =  os.path.join(os.path.dirname(__file__), 'test.json')    
     experiments = parse_json(filename)
 
     experiment_runner = ExperimentRunner(database_name)
