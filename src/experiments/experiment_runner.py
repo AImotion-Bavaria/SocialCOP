@@ -193,7 +193,7 @@ if __name__ == "__main__":
     create_database(database_name)
     print(f"Database '{database_name}' created successfully.")
 
-    filename =  os.path.join(os.path.dirname(__file__), 'test.json')    
+    filename =  os.path.join(os.path.dirname(__file__), 'envy_util_experiment.json')    
     experiments = parse_json(filename)
 
     experiment_runner = ExperimentRunner(database_name)

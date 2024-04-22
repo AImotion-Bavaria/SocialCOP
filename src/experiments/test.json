@@ -5,14 +5,17 @@
         "path" : "../models/table_assignment/",
         "model": "table_assignment_generic.mzn",
         "data": [
-          "generic_2.dzn",
-          "generic_2_preferences.dzn"
+          "generic_1.dzn",
+          "generic_1_preferences.dzn"
         ]
       }
 
     ],
     "solvers": [
-      "chuffed"
+      "chuffed",
+      "gecode",
+      "coin-bc",
+      "com.google.ortools.sat"
     ],
     "configurations": [
       "utilitarian", 

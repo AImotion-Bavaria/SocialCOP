@@ -39,3 +39,15 @@
       "bus_tour_1.dzn"
     ]
   },
+
+
+      "solvers": [
+      "chuffed",
+      "gecode",
+      "coin-bc",
+      "com.google.ortools.sat"
+    ],
+    "configurations": [
+      "utilitarian", 
+      "utilitarian_envy_free"
+    ]

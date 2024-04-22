@@ -1,0 +1,60 @@
+{
+    "problems": [
+      {
+        "problem": "table_assignment",
+        "path" : "../models/table_assignment/",
+        "model": "table_assignment_generic.mzn",
+        "data": [
+          "generic_1.dzn",
+          "generic_1_preferences.dzn"
+        ]
+      },
+      {
+        "problem": "table_assignment",
+        "path" : "../models/table_assignment/",
+        "model": "table_assignment_generic.mzn",
+        "data": [
+          "generic_2.dzn",
+          "generic_2_preferences.dzn"
+        ]
+      },
+      {
+        "problem": "table_assignment",
+        "path" : "../models/table_assignment/",
+        "model": "table_assignment_generic.mzn",
+        "data": [
+          "generic_3.dzn",
+          "generic_3_preferences.dzn"
+        ]
+      },
+      {
+        "problem": "table_assignment",
+        "path" : "../models/table_assignment/",
+        "model": "table_assignment_generic.mzn",
+        "data": [
+          "generic_4.dzn",
+          "generic_4_preferences.dzn"
+        ]
+      },
+      {
+        "problem": "table_assignment",
+        "path" : "../models/table_assignment/",
+        "model": "table_assignment_generic.mzn",
+        "data": [
+          "generic_5.dzn",
+          "generic_5_preferences.dzn"
+        ]
+      }
+    ],
+    "solvers": [
+      "chuffed",
+      "gecode",
+      "coin-bc",
+      "com.google.ortools.sat"
+    ],
+    "configurations": [
+      "utilitarian_envy_free",
+      "utilitarian"
+    ]
+  }
+  
