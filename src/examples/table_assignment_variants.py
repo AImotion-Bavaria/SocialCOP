@@ -65,7 +65,7 @@ def minimize_envy(model : Model, solver : Solver, social_mapping):
 def leximin(model : Model, solver : Solver, social_mapping):
     logging.info("Leximin ...")
     leximin_runner = LeximinRunner(social_mapping)
-    leximin_runner.debug = True
+    leximin_runner.debug = False
     leximin_runner.debug_dir = debug_dir
 
     result = leximin_runner.run(table_assignment_model, gecode)
@@ -75,7 +75,7 @@ def leximin(model : Model, solver : Solver, social_mapping):
 def pareto(model : Model, solver : Solver, social_mapping):
     logging.info("Pareto ...")
     pareto_runner = ParetoRunner(social_mapping)
-    pareto_runner.debug = True
+    pareto_runner.debug = False
     pareto_runner.debug_dir = debug_dir
 
     result = pareto_runner.run(table_assignment_model, gecode)

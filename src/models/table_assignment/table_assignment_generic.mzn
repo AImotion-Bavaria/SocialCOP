@@ -25,15 +25,15 @@ let {
 
 % ----------------------------------------------
 % Generic preference-type definitions:
-function var bool: wants_some_day(array[Days] of var opt Tables: assigned_for_agent,
+function var bool: gets_some_day(array[Days] of var opt Tables: assigned_for_agent,
                                   Days: day
                                   )
           =  (occurs(assigned_for_agent[day]) );   
 
-function var bool: wants_some_number_days(
-                         array[Days] of var opt Tables: assigned_for_agent,
-                         int: num_days)
-          =  (sum(d in Days) (bool2int( occurs(assigned_for_agent[d]) )) == num_days);
+function var int: gets_that_many_days(
+                         array[Days] of var opt Tables: assigned_for_agent
+                         )
+          =  sum(d in Days) (bool2int( occurs(assigned_for_agent[d]) ));
 
 function var bool: wants_a_break_day(
                          array[Days] of var opt Tables: assigned_for_agent) =
@@ -73,11 +73,14 @@ function var int: share_utility(Agents: a, array[Days] of var opt Tables: assign
 let { 
   % 1: the wanted days 
   var int: wanted_days_satisfaction;
-  constraint wanted_days_satisfaction = sum( w in wanted_days[a]) ( wants_some_day(assigned_for_agent, w));
+  % Can be at most 5, will be reduced for every day that I wanted but did not get
+  constraint wanted_days_satisfaction = card(Days) - sum( w in wanted_days[a]) ( not( gets_some_day(assigned_for_agent, w) ));
   
   % 2: the wanted number of days , 
   var int: wanted_number_days_satisfaction;
-  constraint wanted_number_days_satisfaction = sum( w in wanted_number_days[a]) ( wants_some_number_days(assigned_for_agent, w));
+  % wanted_number_days can be {} or a singleton set {i}, therefore we're summing over it
+  % is at most 5, but could be reduced for any deviation between wanted and assigned days
+  constraint wanted_number_days_satisfaction = card(Days) - sum( w in wanted_number_days[a]) ( abs(w - gets_that_many_days(assigned_for_agent)) );
   
   % 3: wanted breaks satisfaction
   var int: wanted_breaks_satisfaction;
