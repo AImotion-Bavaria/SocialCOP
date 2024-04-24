@@ -13,6 +13,8 @@ from util.mzn_debugger import create_debug_folder, log_and_debug_generated_files
 
 PREVIOUS_UTILITIES = "previous_utilities"
 
+def prepare_pareto_runner(social_mapping):
+    return ParetoRunner(social_mapping)
 
 def add_pareto_mixin(instance : Instance, social_mapper):
     pareto_mixin_template_file = os.path.join(os.path.dirname(__file__), '../models/pareto_mixin_template.mzn')
@@ -27,10 +29,6 @@ class ParetoRunner(SimpleRunner):
         super().__init__(social_mapping)
         self.add_presolve_handler(add_pareto_mixin)
 
-    def run(self, model, solver=...):
-        self.model = model
-        return super().run(model, solver)
-    
     def solve(self, instance: Instance):
         # we need an empty list of previous utilities to begin with
         with instance.branch() as child:
@@ -45,11 +43,12 @@ class ParetoRunner(SimpleRunner):
             with instance.branch() as child:
                child[PREVIOUS_UTILITIES] = previous_utilities
                if self.debug:  
-                    log_and_debug_generated_files(child, "pareto_runner", i)
+                    log_and_debug_generated_files(child, "pareto_runner", i, debug_dir_=self.debug_dir)
                res = child.solve()
                if res.solution is not None:
                     logging.info(previous_utilities)
                     new_utilities = res[self.social_mapping[UTILITY_ARRAY]]
+                    dominated_indices = []
                     for solution_index, prev_sol_utils in enumerate(previous_utilities):
                         counter = 0
                         # compare two utility vectors, e.g. [2,5,7] is pareto-dominated by [2, 6, 9]
@@ -57,9 +56,12 @@ class ParetoRunner(SimpleRunner):
                             if prev_sol_utility <= new_utility:
                                 counter += 1
                         if counter == len(prev_sol_utils): # less than or equal for all agents -> previous solution is dominated
-                            del previous_utilities[solution_index]
-                            del previous_solutions[solution_index]
+                            dominated_indices.append(solution_index)
 
+                    for solution_index in dominated_indices[::-1]:
+                        del previous_utilities[solution_index]
+                        del previous_solutions[solution_index]
+                    
                     previous_utilities.append(res[self.social_mapping[UTILITY_ARRAY]])
                     previous_solutions.append(res)
             i += 1

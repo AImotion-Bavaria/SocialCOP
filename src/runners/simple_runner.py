@@ -22,7 +22,7 @@ class SimpleRunner:
             self.presolve_hook(child)
             # immediately before solving, log this model
             if self.debug:
-                    log_and_debug_generated_files(child, "simple_runner_child", 0)
+                    log_and_debug_generated_files(child, "simple_runner_child", 0, self.debug_dir)
             result = self.solve(child)
         return result 
     
