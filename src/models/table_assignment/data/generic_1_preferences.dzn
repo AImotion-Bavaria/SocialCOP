@@ -1,3 +1,4 @@
+%leximin and utilitarian are the same
 n_agents = 3;
 
 Tables = {Table1, Table2};

@@ -1,6 +1,21 @@
 {
     "problems": [
-
+      {
+        "problem": "bus_tour",
+        "path" : "../models/bus_tour/",
+        "model": "bus_tour.mzn",
+        "data": [
+        "bus_tour_4.dzn"
+      ]
+      },
+        {
+          "problem": "bus_tour",
+          "path" : "../models/bus_tour/",
+          "model": "bus_tour.mzn",
+          "data": [
+          "bus_tour_3.dzn"
+        ]
+        },
         {
             "problem": "bus_tour",
             "path" : "../models/bus_tour/",
@@ -19,7 +34,8 @@
           }
     ],
     "solvers": [
-      "chuffed"
+      "chuffed",
+      "gecode"
     ],
     "configurations": [
       "leximin",

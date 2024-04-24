@@ -1,3 +1,4 @@
+%all results are the same
 Site = { 1,2,3,4,5 };
 hotel = 5;
 num_sites =3;

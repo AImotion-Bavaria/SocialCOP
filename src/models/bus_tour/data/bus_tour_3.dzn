@@ -1,8 +1,8 @@
-%will result in 45,7% utilitarian value
-%leximin and rawls are equal
-%runtime for leximin is 2,47 times utilitarian
-%avg(-0,56+(-0,60)+1302+502) avg(difference/utilitarian) -->450,71
-%worst agent: 50200% more
+%will result in 49,6% utilitarian value
+%leximin and rawls are not equal
+%runtime for leximin is 2,29 times utilitarian
+%avg(-0,63+(-0,04)+0,12+0,33) avg(difference/utilitarian) -->-0,055
+%worst agent: 33% more
 Site = { 1,2,3,4,5,6 };
 hotel = 6;
 num_sites =3;
@@ -18,13 +18,13 @@ siteOpens = [ 4, 4, 10, 10, 40, 0];
 siteCloses = [ 70, 70, 70, 70, 70, 200 ];
 
 num_passengers = 4;
-site_score = [| 100, 50, 75, 0, 0, 0
+site_score = [| 7, 50, 75, 80, 0, 0
               | 28, 0, 42, 0, 0, 0
-              | 0, 0, 0, 12, 13, 0 
-              | 0,0,0,4,5,0|];
+              | 0, 0, 0, 12, 13, 12 
+              | 0,0,0,4,5,100|];
 preferred_n_sites = [ 2, 2, 2, 2 ];
 preferred_travel_time = [ 30, 10, 60, 60 ];
-preference_weights = [| 100,1,1
-                      | 100,1,1
-                      | 100,1,1
-                      | 100,1,1 |];
+preference_weights = [| 2,1,1
+                      | 2,1,1
+                      | 2,1,1
+                      | 2,1,1 |];
