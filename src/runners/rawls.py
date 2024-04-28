@@ -16,8 +16,8 @@ def  optimize_rawls_objective(instance : Instance, social_mapper = None):
     
 def prepare_rawls_runner(social_mapping):
     simple_runner = SimpleRunner(social_mapping)
-    simple_runner.add_presolve_handler(add_rawls_objective)
-    simple_runner.add_presolve_handler(optimize_rawls_objective)
+    simple_runner.add(add_rawls_objective)
+    simple_runner.add(optimize_rawls_objective)
     return simple_runner
 
 if __name__ == "__main__":
@@ -32,7 +32,7 @@ if __name__ == "__main__":
 
 
     simple_runner = SimpleRunner(social_mapping)
-    simple_runner.add_presolve_handler(add_rawls_objective)
-    simple_runner.add_presolve_handler(optimize_rawls_objective)
+    simple_runner.add(add_rawls_objective)
+    simple_runner.add(optimize_rawls_objective)
     result = simple_runner.run(plain_tabular_model, gecode)
     print(result)

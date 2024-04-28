@@ -1,5 +1,5 @@
 from simple_runner import SimpleRunner
-from minizinc import Model, Solver, Instance, Status
+from minizinc import Model, Solver, Instance, Status, Result
 import sys 
 import os 
 import logging
@@ -16,7 +16,7 @@ PREVIOUS_UTILITIES = "previous_utilities"
 def prepare_pareto_runner(social_mapping):
     return ParetoRunner(social_mapping)
 
-def add_pareto_mixin(instance : Instance, social_mapper):
+def pareto_mixin(instance : Instance, social_mapper):
     pareto_mixin_template_file = os.path.join(os.path.dirname(__file__), '../models/pareto_mixin_template.mzn')
     pareto_mixin_template = Template(Path(pareto_mixin_template_file).read_text())
     sub_dict = get_substitution_dictionary(social_mapper)
@@ -24,10 +24,23 @@ def add_pareto_mixin(instance : Instance, social_mapper):
     logging.info(pareto_mixin)
     instance.add_string(pareto_mixin)
 
+class ParetoUtilityTracker:
+    def __init__(self) -> None:
+        self.previous_utilities = []
+
+    def write_previous_utilities(self, instance : Instance, social_mapping : dict):
+        instance[PREVIOUS_UTILITIES] = self.previous_utilities
+
+    def update_previous_utilities(self, instance : Instance, social_mapping : dict, result : Result = None):
+        if result: 
+            self.previous_utilities += [result[social_mapping[UTILITY_ARRAY]]]
+
+        
+        
 class ParetoRunner(SimpleRunner):
     def __init__(self, social_mapping) -> None:
         super().__init__(social_mapping)
-        self.add_presolve_handler(add_pareto_mixin)
+        self.model += [pareto_mixin]
 
     def solve(self, instance: Instance):
         # we need an empty list of previous utilities to begin with
@@ -49,6 +62,7 @@ class ParetoRunner(SimpleRunner):
                     logging.info(previous_utilities)
                     new_utilities = res[self.social_mapping[UTILITY_ARRAY]]
                     dominated_indices = []
+
                     for solution_index, prev_sol_utils in enumerate(previous_utilities):
                         counter = 0
                         # compare two utility vectors, e.g. [2,5,7] is pareto-dominated by [2, 6, 9]
@@ -62,7 +76,7 @@ class ParetoRunner(SimpleRunner):
                         del previous_utilities[solution_index]
                         del previous_solutions[solution_index]
                     
-                    previous_utilities.append(res[self.social_mapping[UTILITY_ARRAY]])
+                    previous_utilities.append(new_utilities)
                     previous_solutions.append(res)
             i += 1
         logging.info(f"Previous utilities: {previous_utilities}")

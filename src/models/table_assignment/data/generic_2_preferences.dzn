@@ -1,7 +1,6 @@
 %leximin is 97,8% of utilitarian
 %avg: 0-0,083+0,083-0,083+0,083-0,083-0,083 = 0,166 --> avg=2% worse
 %worst agent is the same for leximin and utilitarian
-n_agents = 8;
 
 Tables  = {Table1, Table2, Table3, Table4};
 wanted_days = [{}, {Mon, Wed}, {Thu, Fri}, {Mon, Wed, Fri}, 

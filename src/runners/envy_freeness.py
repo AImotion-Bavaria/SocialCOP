@@ -13,7 +13,7 @@ from util.mzn_debugger import create_debug_folder, log_and_debug_generated_files
 
 ENVY_PAIRS = "envy_pairs"
 
-def add_envy_freeness_mixin(instance : Instance, social_mapper):
+def envy_freeness_mixin(instance : Instance, social_mapper):
     # That's roughly what the mixin template looks like:
 
     # predicate envy_free() =
@@ -41,14 +41,14 @@ def enforce_envy_freeness(instance : Instance, social_mapper = None):
 
 def prepare_envy_min_runner(social_mapping):
     simple_runner = SimpleRunner(social_mapping)
-    simple_runner.add_presolve_handler(add_envy_freeness_mixin)
-    simple_runner.add_presolve_handler(optimize_envy)
+    simple_runner.model += [envy_freeness_mixin]
+    simple_runner.model +=  [optimize_envy]
     return simple_runner
 
 def prepare_envy_free_runner(social_mapping):
     simple_runner = SimpleRunner(social_mapping)
-    simple_runner.add_presolve_handler(add_envy_freeness_mixin)
-    simple_runner.add_presolve_handler(enforce_envy_freeness)
+    simple_runner.add(envy_freeness_mixin)
+    simple_runner.add(enforce_envy_freeness)
     return simple_runner
 
 if __name__ == "__main__":    
@@ -67,8 +67,8 @@ if __name__ == "__main__":
     simple_runner = SimpleRunner(social_mapping)
     simple_runner.debug = True
     simple_runner.debug_dir = debug_dir
-    simple_runner.add_presolve_handler(add_envy_freeness_mixin)
-    simple_runner.add_presolve_handler(optimize_envy)
+    simple_runner.add(envy_freeness_mixin)
+    simple_runner.add(optimize_envy)
 
     result = simple_runner.run(plain_tabular_model, gecode)
     print(result)

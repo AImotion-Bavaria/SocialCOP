@@ -14,7 +14,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../runners'))
 from simple_runner import SimpleRunner
 from minizinc import Model, Solver
 from utilitarian import add_utilitarian_objective, optimize_utilitarian_objective
-from envy_freeness import add_envy_freeness_mixin, optimize_envy, enforce_envy_freeness
+from envy_freeness import envy_freeness_mixin, optimize_envy, enforce_envy_freeness
 
 from util.social_mapping_reader import read_social_mapping
 from util.mzn_debugger import create_debug_folder
@@ -25,10 +25,10 @@ def maximize_utilitarian_welfare_envyfree(model : Model, solver : Solver, social
     simple_runner.debug = True
     simple_runner.debug_dir = debug_dir
 
-    simple_runner.add_presolve_handler(add_envy_freeness_mixin)
-    simple_runner.add_presolve_handler(enforce_envy_freeness)
-    simple_runner.add_presolve_handler(add_utilitarian_objective)
-    simple_runner.add_presolve_handler(optimize_utilitarian_objective)
+    simple_runner.add(envy_freeness_mixin)
+    simple_runner.add(enforce_envy_freeness)
+    simple_runner.add(add_utilitarian_objective)
+    simple_runner.add(optimize_utilitarian_objective)
 
     result = simple_runner.run(table_assignment_model, solver)
     print(result) 
@@ -40,10 +40,10 @@ def maximize_utilitarian_welfare(model : Model, solver : Solver, social_mapping)
     simple_runner.debug = True
     simple_runner.debug_dir = debug_dir
 
-    simple_runner.add_presolve_handler(add_envy_freeness_mixin)
+    simple_runner.add(envy_freeness_mixin)
     #simple_runner.add_presolve_handler(enforce_envy_freeness)
-    simple_runner.add_presolve_handler(add_utilitarian_objective)
-    simple_runner.add_presolve_handler(optimize_utilitarian_objective)
+    simple_runner.add(add_utilitarian_objective)
+    simple_runner.add(optimize_utilitarian_objective)
 
     result = simple_runner.run(table_assignment_model, solver)
     print(result) 

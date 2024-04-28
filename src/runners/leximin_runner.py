@@ -18,30 +18,35 @@ NEXT_WORST_AGENT = "next_worst_agent"
 
 def add_leximin_mixin(instance : Instance, social_mapper):
     instance.add_file(os.path.join(os.path.dirname(__file__), '../models/leximin_mixin.mzn'))
-    instance.add_string(f"{LEXIMIN_AGENTS_PLACEHOLDER} = {social_mapper[AGENTS_ARRAY]};\n")
-    instance.add_string(f"{LEXIMIN_UTILITIES_PLACEHOLDER} = {social_mapper[UTILITY_ARRAY]};\n")
+    instance.add_string(f"\n{LEXIMIN_AGENTS_PLACEHOLDER} = {social_mapper[AGENTS_ARRAY]};\n")
+    instance.add_string(f"\n{LEXIMIN_UTILITIES_PLACEHOLDER} = {social_mapper[UTILITY_ARRAY]};\n")
 
 class LeximinRunner(SimpleRunner):
     def __init__(self, social_mapping) -> None:
         super().__init__(social_mapping)
-        self.add_presolve_handler(add_leximin_mixin)
-
-    def run(self, model, solver=...):
-        self.model = model
-        return super().run(model, solver)
+        self.add(add_leximin_mixin)
+        self.presolve_step = []
     
+    def presolve_step_hook(self, instance):
+        for handler in self.presolve_step:
+            handler(instance, self.social_mapping)
+
     def solve(self, child: Instance):
         # have to ask the model, otherwise the parameter might not get passed to the child instance
-        num_agents = self.model[self.social_mapping[NUM_AGENTS]]
+        num_agents = self.mzn_model[self.social_mapping[NUM_AGENTS]]
 
         # gets initialized to be empty, updated with minimal values as we go
         maxmin_values = []
         for i in range(num_agents):
             with child.branch() as inst:
                 inst[MAXMIN_VALUES] = maxmin_values
+                self.presolve_step_hook(inst)
+                
                 if self.debug:
-                    log_and_debug_generated_files(inst, "leximin_runner_inst", i)
+                    log_and_debug_generated_files(inst, "leximin_runner_inst", i, self.debug_dir)
                 result = inst.solve()
+                # here, we could have some on result constraints 
+                self.on_result_hook(child, result)
 
                 #calculate and store preconditions for next iteration 
                 worst_util = result[NEXT_WORST_UTIL]

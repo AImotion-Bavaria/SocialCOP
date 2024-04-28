@@ -59,7 +59,7 @@ if __name__ == "__main__":
     on_result_runner = OnResultRunner(social_mapping)
     from utilitarian import add_utilitarian_objective, get_better_utilitarian
     # insert all decision variables to calculate the utilitarian objective for this model
-    on_result_runner.add_presolve_handler(add_utilitarian_objective)
+    on_result_runner.add(add_utilitarian_objective)
     # optimize for the utilitarian objective using on result constraints
     on_result_runner.add_on_result_handler(get_better_utilitarian)
     on_result_runner.run(social_selection_model)
