@@ -46,7 +46,7 @@ class ParetoRunner(SimpleRunner):
         # we need an empty list of previous utilities to begin with
         with instance.branch() as child:
             child[PREVIOUS_UTILITIES] = []
-            res = child.solve()
+            res = child.solve(timeout=self.timeout)
         previous_utilities = [res[self.social_mapping[UTILITY_ARRAY]]]
         previous_solutions = [res] # the actual solutions might be important, too
         logging.info(previous_utilities)
@@ -57,7 +57,7 @@ class ParetoRunner(SimpleRunner):
                child[PREVIOUS_UTILITIES] = previous_utilities
                if self.debug:  
                     log_and_debug_generated_files(child, "pareto_runner", i, debug_dir_=self.debug_dir)
-               res = child.solve()
+               res = child.solve(timeout=self.timeout)
                if res.solution is not None:
                     logging.info(previous_utilities)
                     new_utilities = res[self.social_mapping[UTILITY_ARRAY]]

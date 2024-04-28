@@ -3,7 +3,7 @@ from os.path import dirname
 import logging
 import pickle 
 import datetime
-
+from datetime import timedelta
 
 #Add src folder to python path
 import os
@@ -14,12 +14,12 @@ sys.path.append(src)
 
 from experiment import Experiment, parse_json
 from simple_runner import SimpleRunner
-from minizinc import Model, Solver
+from minizinc import Model, Solver, Result, Status
 from utilitarian import prepare_utilitarian_runner
 from envy_freeness import prepare_envy_free_runner, prepare_envy_min_runner, ENVY_PAIRS, envy_freeness_mixin, enforce_envy_freeness, SHARE_FUNCTION
 from leximin_runner import prepare_leximin_runner
 from pareto_runner import ParetoRunner
-from rawls_runner import prepare_rawls_runner
+from rawls import prepare_rawls_runner
 
 from util.social_mapping_reader import read_social_mapping, UTILITY_ARRAY
 from util.mzn_debugger import create_debug_folder
@@ -28,9 +28,11 @@ base_dir = os.path.dirname(__file__)
 result_dir = os.path.join(base_dir, 'results')
 
 FORCE_OVERRIDE = True  # use cached versions if false
+TIME_LIMIT_EVAL = timedelta(hours=1.0)
 
 def rawls(model: Model, social_mapping, solver: Solver):
     simple_runner = prepare_rawls_runner(social_mapping)
+    simple_runner.timeout = TIME_LIMIT_EVAL
     result = simple_runner.run(model, solver)
     return result
 
@@ -38,6 +40,7 @@ def utilitarian(model : Model, social_mapping : dict, solver : Solver):
     simple_runner = prepare_utilitarian_runner(social_mapping)
     if SHARE_FUNCTION in social_mapping: # it is a division problem - I want to record envy counts as well
         simple_runner.add(envy_freeness_mixin)
+    simple_runner.timeout = TIME_LIMIT_EVAL
 
     result = simple_runner.run(model, solver)
     return result
@@ -50,6 +53,8 @@ def utilitarian_envy_free(model : Model, social_mapping : dict, solver : Solver)
     simple_runner : SimpleRunner = prepare_utilitarian_runner(social_mapping)
     simple_runner.add(envy_freeness_mixin)
     simple_runner.add(enforce_envy_freeness)
+    simple_runner.timeout = TIME_LIMIT_EVAL
+
     result = simple_runner.run(model, solver)
     return result
 
@@ -57,6 +62,7 @@ def envy_min(model : Model, social_mapping : dict, solver : Solver):
     if not SHARE_FUNCTION in social_mapping: # it is not  a division problem
         return None 
     simple_runner = prepare_envy_min_runner(social_mapping)
+    simple_runner.timeout = TIME_LIMIT_EVAL
     result = simple_runner.run(model, solver)
     return result
 
@@ -64,6 +70,7 @@ def envy_free(model : Model, social_mapping : dict, solver : Solver):
     if not SHARE_FUNCTION in social_mapping: # it is not  a division problem
         return None 
     simple_runner = prepare_envy_free_runner(social_mapping)
+    simple_runner.timeout = TIME_LIMIT_EVAL
     result = simple_runner.run(model, solver)
     return result
 
@@ -71,6 +78,7 @@ def leximin(model: Model, social_mapping, solver: Solver):
     simple_runner = prepare_leximin_runner(social_mapping)
     simple_runner.debug = True
     simple_runner.debug_dir = create_debug_folder(os.path.dirname(__file__))
+    simple_runner.timeout = TIME_LIMIT_EVAL
     result = simple_runner.run(model, solver)
     return result
 
@@ -154,11 +162,11 @@ class ExperimentRunner:
 
         solver = Solver.lookup(experiment.solver)
         start_time = datetime.datetime.now()
-        result = configurations_map[experiment.configuration](model, social_mapping, solver)
+        result : Result = configurations_map[experiment.configuration](model, social_mapping, solver)
         end_time = datetime.datetime.now()
         elapsed_time = end_time - start_time
 
-        if result:
+        if result and result.status != Status.UNKNOWN:
             utils = result[social_mapping[UTILITY_ARRAY]]
             db_result = {"model": experiment.problem, "data_files" : "".join(experiment.model_inst[1]), 
                         "utilities" : utils, "max_utility" : max(utils), "min_utility" : min(utils), "sum_utility" : sum(utils),

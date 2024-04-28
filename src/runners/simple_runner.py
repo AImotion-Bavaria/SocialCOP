@@ -15,6 +15,7 @@ class SimpleRunner:
         self.debug = False
         self.debug_dir = None
         self.social_mapping = social_mapping
+        self.timeout = None
 
     def run(self, model, solver = Solver.lookup("gecode")):
         self.instance = Instance(solver, model)
@@ -32,7 +33,7 @@ class SimpleRunner:
         """
         intended to be overwritten by specialized runners 
         """ 
-        return child.solve()
+        return child.solve(timeout = self.timeout)
     
     def add(self, presolve_handler):
         """_summary_

@@ -44,7 +44,7 @@ class LeximinRunner(SimpleRunner):
                 
                 if self.debug:
                     log_and_debug_generated_files(inst, "leximin_runner_inst", i, self.debug_dir)
-                result = inst.solve()
+                result = inst.solve(timeout=self.timeout)
                 # here, we could have some on result constraints 
                 self.on_result_hook(child, result)
 

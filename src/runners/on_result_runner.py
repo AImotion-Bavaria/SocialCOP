@@ -23,7 +23,7 @@ class OnResultRunner(SimpleRunner):
         self.on_result_handlers.append(handler)
 
     def solve(self, inst: Instance):
-        res = inst.solve()
+        res = inst.solve(timeout=self.timeout)
         previous_solutions = [res]
                  
         solutions = []
@@ -36,7 +36,7 @@ class OnResultRunner(SimpleRunner):
                     on_result_handler(child, res)
                 if self.debug:
                     log_and_debug_generated_files(child)
-                res = child.solve()
+                res = child.solve(timeout=self.timeout)
         return previous_solutions
 
 if __name__ == "__main__":    
