@@ -1,5 +1,5 @@
 %all results are the same
-Site = { 1,2,3,4,5 };
+Site = {1, 2, 3, 4, 5};
 hotel = 5;
 distance = [| 0, 3, 13, 9, 4
             | 3, 0, 12, 8, 7

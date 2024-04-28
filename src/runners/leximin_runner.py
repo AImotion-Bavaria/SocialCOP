@@ -1,5 +1,5 @@
 from simple_runner import SimpleRunner
-from minizinc import Model, Solver, Instance
+from minizinc import Model, Solver, Instance, Status 
 import sys 
 import os 
 import logging
@@ -45,6 +45,10 @@ class LeximinRunner(SimpleRunner):
                 if self.debug:
                     log_and_debug_generated_files(inst, "leximin_runner_inst", i, self.debug_dir)
                 result = inst.solve(timeout=self.timeout)
+                # TODO what happens here in a timeout
+                if not result.solution or result.status == Status.UNKNOWN:
+                    return last_result
+                
                 # here, we could have some on result constraints 
                 self.on_result_hook(child, result)
 
@@ -55,6 +59,7 @@ class LeximinRunner(SimpleRunner):
                 # some logging
                 logging.info(f"Currently worst-off agent {result[NEXT_WORST_AGENT]} with utility {result[NEXT_WORST_UTIL]}")
                 logging.info(f"Maxmin agents: {result[MAXMIN_AGENTS]}")
+                last_result = result 
 
         return result
 

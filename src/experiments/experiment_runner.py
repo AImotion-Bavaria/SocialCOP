@@ -202,7 +202,10 @@ class ExperimentRunner:
         for experiment in experiments:
             experiment : Experiment = experiment
             logging.info("------------- Running experiment ... "+ experiment.get_identifier())
-            self.run_experiment(experiment)
+            try :
+                self.run_experiment(experiment)
+            except:
+                logging.info("An error occurred, continuing")
 
 if __name__ == "__main__":
     import os 
@@ -211,11 +214,11 @@ if __name__ == "__main__":
     if not os.path.isdir(result_dir):
         os.makedirs(result_dir)
 
-    database_name = os.path.join(result_dir, 'results_database.db')
+    database_name = os.path.join(result_dir, 'results_database_leximin.db')
     create_database(database_name)
     print(f"Database '{database_name}' created successfully.")
 
-    filename =  os.path.join(os.path.dirname(__file__), 'test.json')    
+    filename =  os.path.join(os.path.dirname(__file__), 'leximin_pareto_leximin.json')    
     experiments = parse_json(filename)
 
     experiment_runner = ExperimentRunner(database_name)

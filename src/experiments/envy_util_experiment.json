@@ -48,9 +48,9 @@
     ],
     "solvers": [
       "chuffed",
-      "gecode",
       "coin-bc",
-      "com.google.ortools.sat"
+      "com.google.ortools.sat",
+      "gecode"
     ],
     "configurations": [
       "utilitarian_envy_free",
