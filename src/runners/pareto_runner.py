@@ -24,6 +24,16 @@ def pareto_mixin(instance : Instance, social_mapper):
     logging.info(pareto_mixin)
     instance.add_string(pareto_mixin)
 
+def pareto_only_nondom_mixin(instance : Instance, social_mapper):
+    # this has to be used in case we can see _the same_ utility vector again, it just may not be dominated by another in the previous utils
+    # ex. if you're using leximin, you might see the same solution multiple times
+    pareto_only_nondom_mixin_template_file = os.path.join(os.path.dirname(__file__), '../models/pareto_only_nondom_mixin_template.mzn')
+    pareto_only_nondom_mixin_template = Template(Path(pareto_only_nondom_mixin_template_file).read_text())
+    sub_dict = get_substitution_dictionary(social_mapper)
+    pareto_only_nondom_mixin = pareto_only_nondom_mixin_template.substitute(sub_dict)
+    logging.info(pareto_only_nondom_mixin)
+    instance.add_string(pareto_only_nondom_mixin)
+
 class ParetoUtilityTracker:
     def __init__(self) -> None:
         self.previous_utilities = []

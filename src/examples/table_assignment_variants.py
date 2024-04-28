@@ -16,7 +16,7 @@ from minizinc import Model, Solver
 from utilitarian import add_utilitarian_objective, optimize_utilitarian_objective
 from envy_freeness import envy_freeness_mixin, optimize_envy, enforce_envy_freeness
 from leximin_runner import LeximinRunner
-from pareto_runner import ParetoRunner, pareto_mixin, ParetoUtilityTracker
+from pareto_runner import ParetoRunner, pareto_mixin, pareto_only_nondom_mixin, ParetoUtilityTracker
 
 from util.social_mapping_reader import read_social_mapping
 from util.mzn_debugger import create_debug_folder
@@ -75,7 +75,7 @@ def leximin(model : Model, solver : Solver, social_mapping):
 def leximin_pareto(model : Model, solver : Solver, social_mapping):
     logging.info("Leximin ...")
     leximin_runner = LeximinRunner(social_mapping)
-    leximin_runner.model += [pareto_mixin] 
+    leximin_runner.model += [pareto_only_nondom_mixin] 
     # also need a pareto tracker
     pareto_tracker = ParetoUtilityTracker()
     leximin_runner.presolve_step += [pareto_tracker.write_previous_utilities]

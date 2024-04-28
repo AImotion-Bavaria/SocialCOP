@@ -17,8 +17,8 @@ from simple_runner import SimpleRunner
 from minizinc import Model, Solver, Result, Status
 from utilitarian import prepare_utilitarian_runner
 from envy_freeness import prepare_envy_free_runner, prepare_envy_min_runner, ENVY_PAIRS, envy_freeness_mixin, enforce_envy_freeness, SHARE_FUNCTION
-from leximin_runner import prepare_leximin_runner
-from pareto_runner import ParetoRunner
+from leximin_runner import prepare_leximin_runner, LeximinRunner
+from pareto_runner import ParetoRunner, pareto_only_nondom_mixin, ParetoUtilityTracker
 from rawls import prepare_rawls_runner
 
 from util.social_mapping_reader import read_social_mapping, UTILITY_ARRAY
@@ -82,11 +82,25 @@ def leximin(model: Model, social_mapping, solver: Solver):
     result = simple_runner.run(model, solver)
     return result
 
+def leximin_pareto(model: Model, social_mapping, solver: Solver):
+    simple_runner : LeximinRunner = prepare_leximin_runner(social_mapping)
+    simple_runner.debug = True
+    simple_runner.debug_dir = create_debug_folder(os.path.dirname(__file__))
+    simple_runner.timeout = TIME_LIMIT_EVAL
+
+    simple_runner.model += [pareto_only_nondom_mixin] 
+    # also need a pareto tracker
+    pareto_tracker = ParetoUtilityTracker()
+    simple_runner.presolve_step += [pareto_tracker.write_previous_utilities]
+    simple_runner.on_result += [pareto_tracker.update_previous_utilities]
+    result = simple_runner.run(model, solver)
+    return result
+
 configurations_map = {
       "rawls" : rawls,
       "leximin": leximin,
       "utilitarian" : utilitarian,
-      "leximin_pareto":  rawls,
+      "leximin_pareto":  leximin_pareto,
       "utilitarian_envy_free":utilitarian_envy_free,
       "envy_free": envy_free,
       "envy_min": envy_min
@@ -201,7 +215,7 @@ if __name__ == "__main__":
     create_database(database_name)
     print(f"Database '{database_name}' created successfully.")
 
-    filename =  os.path.join(os.path.dirname(__file__), 'envy_util_experiment.json')    
+    filename =  os.path.join(os.path.dirname(__file__), 'test.json')    
     experiments = parse_json(filename)
 
     experiment_runner = ExperimentRunner(database_name)
