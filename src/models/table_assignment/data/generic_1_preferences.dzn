@@ -1,4 +1,4 @@
-n_agents = 3;
+%leximin and utilitarian are the same
 
 Tables = {Table1, Table2};
 wanted_days = [{}, {Mon, Wed}, {Thu, Fri}];

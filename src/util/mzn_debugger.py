@@ -10,7 +10,8 @@ def create_debug_folder(base_dir):
         os.makedirs(debug_dir)
     return debug_dir
 
-def log_and_debug_generated_files(child, debug_prefix, model_counter=0):
+def log_and_debug_generated_files(child, debug_prefix, model_counter=0, debug_dir_ = debug_dir):
+
     with child.files() as files:
         logging.info(files)
 
@@ -20,7 +21,7 @@ def log_and_debug_generated_files(child, debug_prefix, model_counter=0):
         for item in files:
             filename = os.path.basename(item)
             base, extension = os.path.splitext(filename)
-            current_file_dest = os.path.join(debug_dir, f"{model_counter}_{debug_prefix}.{extension}")
+            current_file_dest = os.path.join(debug_dir_, f"{model_counter}_{debug_prefix}.{extension}")
             if current_file_dest in current_batch_set:
                 file_modifier = "ab"
             else:

@@ -16,7 +16,7 @@ from experiment import Experiment, parse_json
 from simple_runner import SimpleRunner
 from minizinc import Model, Solver
 from utilitarian import prepare_utilitarian_runner
-from envy_freeness import prepare_envy_free_runner, prepare_envy_min_runner, ENVY_PAIRS, add_envy_freeness_mixin, enforce_envy_freeness, SHARE_FUNCTION
+from envy_freeness import prepare_envy_free_runner, prepare_envy_min_runner, ENVY_PAIRS, envy_freeness_mixin, enforce_envy_freeness, SHARE_FUNCTION
 from leximin_runner import prepare_leximin_runner
 from pareto_runner import ParetoRunner
 from rawls_runner import prepare_rawls_runner
@@ -37,7 +37,7 @@ def rawls(model: Model, social_mapping, solver: Solver):
 def utilitarian(model : Model, social_mapping : dict, solver : Solver):
     simple_runner = prepare_utilitarian_runner(social_mapping)
     if SHARE_FUNCTION in social_mapping: # it is a division problem - I want to record envy counts as well
-        simple_runner.add_presolve_handler(add_envy_freeness_mixin)
+        simple_runner.add(envy_freeness_mixin)
 
     result = simple_runner.run(model, solver)
     return result
@@ -48,8 +48,8 @@ def utilitarian_envy_free(model : Model, social_mapping : dict, solver : Solver)
         return None 
      
     simple_runner : SimpleRunner = prepare_utilitarian_runner(social_mapping)
-    simple_runner.add_presolve_handler(add_envy_freeness_mixin)
-    simple_runner.add_presolve_handler(enforce_envy_freeness)
+    simple_runner.add(envy_freeness_mixin)
+    simple_runner.add(enforce_envy_freeness)
     result = simple_runner.run(model, solver)
     return result
 

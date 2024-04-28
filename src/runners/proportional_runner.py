@@ -48,8 +48,8 @@ if __name__ == "__main__":
 
 
     simple_runner = ProportionalityRunner(social_mapping)
-    simple_runner.add_presolve_handler(add_proportionality_objective, social_mapping)
-    simple_runner.add_presolve_handler(optimize_proportionality_objective, social_mapping)
+    simple_runner.add(add_proportionality_objective, social_mapping)
+    simple_runner.add(optimize_proportionality_objective, social_mapping)
     # simple_runner.add_presolve_handler(partial(add_utilitarian_objective, social_mapping))
     # simple_runner.add_presolve_handler(optimize_utilitarian_objective)
     result = simple_runner.run(plain_tabular_model, gecode)

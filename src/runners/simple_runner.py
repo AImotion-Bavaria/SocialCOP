@@ -10,20 +10,22 @@ from util.mzn_debugger import create_debug_folder, log_and_debug_generated_files
 
 class SimpleRunner:
     def __init__(self, social_mapping) -> None:
-        self.presolve_handlers = [] # a list of functions applied before solving
+        self.model = []   # a list of functions applied before solving
+        self.on_result = [] # a list of functions applied after seeing a result
         self.debug = False
         self.debug_dir = None
         self.social_mapping = social_mapping
 
     def run(self, model, solver = Solver.lookup("gecode")):
         self.instance = Instance(solver, model)
-        self.model = model 
+        self.mzn_model = model 
         with self.instance.branch() as child:
             self.presolve_hook(child)
             # immediately before solving, log this model
             if self.debug:
-                    log_and_debug_generated_files(child, "simple_runner_child", 0)
+                    log_and_debug_generated_files(child, "simple_runner_child", 0, self.debug_dir)
             result = self.solve(child)
+            self.on_result_hook(child, result)
         return result 
     
     def solve(self, child : Instance):
@@ -32,18 +34,21 @@ class SimpleRunner:
         """ 
         return child.solve()
     
-    def add_presolve_handler(self, presolve_handler):
+    def add(self, presolve_handler):
         """_summary_
 
         Args:
             presolve_handler (function): function takes a child instance as argument
         """
-        self.presolve_handlers.append(presolve_handler)
+        self.model.append(presolve_handler)
 
     def presolve_hook(self, instance):
-        for handler in self.presolve_handlers:
+        for handler in self.model:
             handler(instance, self.social_mapping)
 
+    def on_result_hook(self, instance, result):
+        for handler in self.on_result:
+            handler(instance, self.social_mapping, result)
 
 if __name__ == "__main__":
     import os

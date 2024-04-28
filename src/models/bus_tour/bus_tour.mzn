@@ -3,7 +3,6 @@
 set of int: Site;
 Site: hotel;
 array[Site,Site] of int: distance;
-int: num_sites;
 
 array[Site] of int: durationOfVisit;
 array[Site] of int: siteOpens;
@@ -35,23 +34,29 @@ var int: travel_time = sum (i in Site where i != next[i]) (distance[i,next[i]]);
 
 int: num_passengers;
 set of int: Passenger = 1..num_passengers;
+int: num_category =3;
 array[Passenger,Site] of int: site_score;
 array[Passenger] of int: preferred_n_sites;
-array[Passenger] of int: preferred_travel_time;
-array[Passenger,1..num_sites] of int: preference_weights;
+array[Passenger] of int: preferred_travel_time; % preferred maximum travel time
+array[Passenger,1..num_category] of int: preference_weights;
 
-array[Passenger,1..num_sites] of var int: passenger_scores;
+array[Passenger,1..num_category] of var int: passenger_scores;
+var int: number_of_visited_sites;
+constraint number_of_visited_sites = sum (s in Site where s != hotel) (s != next[s]);
+
+% number_of_visited_sites / preferred_n_sites[p] 
+int: num_sites = card(Site);
 constraint passenger_scores  = 
-array2d(Passenger,1..num_sites,
+array2d(Passenger,1..num_category,
 [ if i=1 then sum (s in Site where s != hotel /\ s != next[s]) (site_score[p,s])
-  elseif i=2 then (preferred_n_sites[p]-abs(preferred_n_sites[p] - sum (s in Site where s != hotel) (s != next[s])))
+  elseif i=2 then (num_sites - abs(preferred_n_sites[p] - number_of_visited_sites))
   else min(preferred_travel_time[p] - travel_time,0)
   endif
-| p in Passenger, i in 1..num_sites]);
+| p in Passenger, i in 1..num_category]);
 
 array[Passenger] of var int: score;
 constraint score  =
-[  sum([ preference_weights[p,i] * passenger_scores[p,i] | i in 1..num_sites])
+[  sum([ preference_weights[p,i] * passenger_scores[p,i] | i in 1..num_category])
   | p in Passenger,  ];
   
-  % for loop with num_sites?
+ 
