@@ -110,8 +110,8 @@ if __name__ == "__main__":
     table_assignment_model = Model()
     model_file = os.path.join(os.path.dirname(__file__), '../models/table_assignment/table_assignment_generic.mzn')
     table_assignment_model.add_file(model_file, parse_data = True)
-    table_assignment_model.add_file(os.path.join(os.path.dirname(__file__), '../models/table_assignment/data/generic_1.dzn'), parse_data=True)
-    table_assignment_model.add_file(os.path.join(os.path.dirname(__file__), '../models/table_assignment/data/generic_1_preferences.dzn'), parse_data=True)
+    table_assignment_model.add_file(os.path.join(os.path.dirname(__file__), '../models/table_assignment/data/generic_2.dzn'), parse_data=True)
+    table_assignment_model.add_file(os.path.join(os.path.dirname(__file__), '../models/table_assignment/data/generic_2_preferences.dzn'), parse_data=True)
     gecode = Solver.lookup("chuffed")
     
     # now let's read the social mapping file 
@@ -119,22 +119,22 @@ if __name__ == "__main__":
     social_mapping = read_social_mapping(social_mapping_file)
     
     # 6. A Leximin run with a redundant Pareto constraints posted on top 
-    leximin_pareto(table_assignment_model, gecode, social_mapping)
+    #leximin_pareto(table_assignment_model, gecode, social_mapping)
 
     # 1. Simply maximize the utilitarian welfare
-    maximize_utilitarian_welfare(table_assignment_model, gecode, social_mapping)
+    #maximize_utilitarian_welfare(table_assignment_model, gecode, social_mapping)
 
     # 2. Minimize envy
-    minimize_envy(table_assignment_model, gecode, social_mapping)
+    #minimize_envy(table_assignment_model, gecode, social_mapping)
 
     # 3. Enforce envy-freeness, maximize utilitarian
     maximize_utilitarian_welfare_envyfree(table_assignment_model, gecode, social_mapping)
 
     # 4. A Leximin run
-    leximin(table_assignment_model, gecode, social_mapping)
+    #leximin(table_assignment_model, gecode, social_mapping)
 
     # 5. A Pareto run 
-    pareto(table_assignment_model, gecode, social_mapping)
+    #pareto(table_assignment_model, gecode, social_mapping)
 
 
 
