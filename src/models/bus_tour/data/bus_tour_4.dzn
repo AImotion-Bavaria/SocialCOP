@@ -1,8 +1,7 @@
 %utilitarian will allow negative outcome for one agent
-%leximin is 91,5% of utilitarian
+%leximin is 91,9% of utilitarian
 %leximin and rawls are equal
-%avg(1,39+(-0,36)+4,76+0,79) avg(difference/utilitarian) -->1,645
-%worst agent 139% more
+%worst agent: from -75 to 35
 Site = { 1,2,3,4,5,6 };
 hotel = 6;
 distance = [| 7, 14, 3, 9, 10, 5

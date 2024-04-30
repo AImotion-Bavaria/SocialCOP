@@ -1,8 +1,7 @@
-%will result in 45,7% utilitarian value
-%leximin and rawls are equal
-%runtime for leximin is 2,47 times utilitarian
-%avg(-0,56+(-0,60)+1302+502) avg(difference/utilitarian) -->450,71
-%worst agent: 50200% more
+%leximin will result in 45,7% utilitarian value
+%leximin and rawls are not equal, sum_utility is less in leximin
+%runtime for leximin is 2,46 times utilitarian
+%worst agent: from 5 to 506 -> 101,2 times
 Site = { 1,2,3,4,5,6 };
 hotel = 6;
 distance = [| 0, 3, 13, 9, 9, 4
