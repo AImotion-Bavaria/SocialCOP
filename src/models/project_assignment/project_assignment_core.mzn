@@ -4,7 +4,6 @@ include "../generic_social_welfare.mzn";
 
 int: n; % number of students (which take the role of agents here)
 set of int: STUDENT = 1..n;
-set of int: AGENTS = STUDENT; % to be consistent with other models
 
 int: p; % number of topics
 set of int: PROJECT = 1..p;
@@ -26,8 +25,8 @@ constraint forall(s in STUDENT) (
 );
 
 % convert this to utils -> e.g. rank 1 out of 5 gives Utility 4, rank 5 out of 5 gives Utility 0
-array[AGENTS] of var PROJECT: util_per_agent;
-constraint forall(s in AGENTS) (
+array[STUDENT] of var PROJECT: util_per_agent;
+constraint forall(s in STUDENT) (
    util_per_agent[s] = p - studentRanksProjectAt[s] 
 );
 

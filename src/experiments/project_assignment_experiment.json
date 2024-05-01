@@ -1,0 +1,46 @@
+{
+    "problems": [
+      {
+        "problem": "project_assignment",
+        "path" : "../models/project_assignment/",
+        "model": "project_assignment_core.mzn",
+        "data": [
+        "project_assignment_1.dzn"
+      ]
+      },
+      {
+        "problem": "project_assignment",
+        "path" : "../models/project_assignment/",
+        "model": "project_assignment_core.mzn",
+        "data": [
+        "project_assignment_2.dzn"
+      ]
+      },
+      {
+        "problem": "project_assignment",
+        "path" : "../models/project_assignment/",
+        "model": "project_assignment_core.mzn",
+        "data": [
+        "project_assignment_3.dzn"
+      ]
+      },
+      {
+        "problem": "project_assignment",
+        "path" : "../models/project_assignment/",
+        "model": "project_assignment_core.mzn",
+        "data": [
+        "project_assignment_4.dzn"
+      ]
+      }
+    ],
+    "solvers": [
+      "chuffed",
+      "gecode"
+    ],
+    "configurations": [
+      "leximin",
+      "rawls",
+      "utilitarian"
+    ]
+  }
+  

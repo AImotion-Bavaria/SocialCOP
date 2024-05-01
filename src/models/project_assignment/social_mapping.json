@@ -1,4 +1,6 @@
 {
     "agents_array" : "STUDENT",
-    "utility_array" : "util_per_agent"
+    "utility_array" : "util_per_agent",
+    "num_agents" : "n"
+
 }

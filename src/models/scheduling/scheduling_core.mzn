@@ -37,7 +37,8 @@ constraint forall(j in JOBS, t in TASKS)(
 );
 
 % machines 
-set of int: MACHINES = 1..3;
+int: n_machines;
+set of int: MACHINES = 1..n_machines;
 array[JOBS,TASKS] of MACHINES: taskToMach;
 
 constraint 

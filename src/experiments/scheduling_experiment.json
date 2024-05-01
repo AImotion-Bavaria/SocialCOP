@@ -1,0 +1,54 @@
+{
+    "problems": [
+      {
+        "problem": "scheduling",
+        "path" : "../models/scheduling/",
+        "model": "scheduling_standalone.mzn",
+        "data": [
+        "scheduling_1.dzn"
+      ]
+      },
+      {
+        "problem": "scheduling",
+        "path" : "../models/scheduling/",
+        "model": "scheduling_standalone.mzn",
+        "data": [
+        "scheduling_2.dzn"
+      ]
+      },
+      {
+        "problem": "scheduling",
+        "path" : "../models/scheduling/",
+        "model": "scheduling_standalone.mzn",
+        "data": [
+        "scheduling_4.dzn"
+      ]
+      },
+      {
+        "problem": "scheduling",
+        "path" : "../models/scheduling/",
+        "model": "scheduling_standalone.mzn",
+        "data": [
+        "scheduling_5.dzn"
+      ]
+      },
+      {
+        "problem": "scheduling",
+        "path" : "../models/scheduling/",
+        "model": "scheduling_standalone.mzn",
+        "data": [
+        "scheduling_6.dzn"
+      ]
+      }
+    ],
+    "solvers": [
+      "chuffed",
+      "gecode"
+    ],
+    "configurations": [
+      "leximin",
+      "rawls",
+      "utilitarian"
+    ]
+  }
+  
