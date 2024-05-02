@@ -36,16 +36,16 @@ def maximize_utilitarian_welfare(model : Model, solver : Solver, social_mapping)
 
 def maximize_utilitarian_welfare_envyfree(model : Model, solver : Solver, social_mapping):
     logging.info("Maximizing utilitarian welfare with envy-freeness ...")
-    simple_runner = SimpleRunner(social_mapping)
-    simple_runner.debug = True
-    simple_runner.debug_dir = debug_dir
+    runner = SimpleRunner(social_mapping)
+    runner.debug = True
+    runner.debug_dir = debug_dir
 
-    simple_runner.add(envy_freeness_mixin)
-    simple_runner.add(enforce_envy_freeness)
-    simple_runner.add(add_utilitarian_objective)
-    simple_runner.add(optimize_utilitarian_objective)
+    runner.model += [envy_freeness_mixin]
+    runner.model += [enforce_envy_freeness]
+    runner.add(add_utilitarian_objective)
+    runner.add(optimize_utilitarian_objective)
 
-    result = simple_runner.run(table_assignment_model, gecode)
+    result = runner.run(table_assignment_model, gecode)
     print(result) 
     print("--"*50)
 

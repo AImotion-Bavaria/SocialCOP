@@ -2,8 +2,6 @@
 # for the comparison between leximin and utilitarian
 import os
 
-db_file = os.path.join(os.path.dirname(__file__), 'results_database_leximin.db')
-
 import sqlite3
 import os
 import numpy as np
