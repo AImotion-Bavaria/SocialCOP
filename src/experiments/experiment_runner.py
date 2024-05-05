@@ -51,8 +51,7 @@ def utilitarian_envy_free(model : Model, social_mapping : dict, solver : Solver)
         return None 
      
     simple_runner : SimpleRunner = prepare_utilitarian_runner(social_mapping)
-    simple_runner.add(envy_freeness_mixin)
-    simple_runner.add(enforce_envy_freeness)
+    simple_runner.model += [envy_freeness_mixin, enforce_envy_freeness]
     simple_runner.timeout = TIME_LIMIT_EVAL
 
     result = simple_runner.run(model, solver)
