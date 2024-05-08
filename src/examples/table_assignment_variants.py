@@ -13,7 +13,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../runners'))
 
 from simple_runner import SimpleRunner
 from minizinc import Model, Solver
-from utilitarian import add_utilitarian_objective, optimize_utilitarian_objective
+from utilitarian import utilitarian_objective, optimize_utilitarian_objective
 from envy_freeness import envy_freeness_mixin, optimize_envy, enforce_envy_freeness
 from leximin_runner import LeximinRunner
 from pareto_runner import ParetoRunner, pareto_mixin, pareto_only_nondom_mixin, ParetoUtilityTracker
@@ -27,7 +27,7 @@ def maximize_utilitarian_welfare(model : Model, solver : Solver, social_mapping)
     simple_runner.debug = True
     simple_runner.debug_dir = debug_dir
 
-    simple_runner.add(add_utilitarian_objective)
+    simple_runner.add(utilitarian_objective)
     simple_runner.add(optimize_utilitarian_objective)
 
     result = simple_runner.run(table_assignment_model, gecode)
@@ -42,7 +42,7 @@ def maximize_utilitarian_welfare_envyfree(model : Model, solver : Solver, social
 
     runner.model += [envy_freeness_mixin]
     runner.model += [enforce_envy_freeness]
-    runner.add(add_utilitarian_objective)
+    runner.add(utilitarian_objective)
     runner.add(optimize_utilitarian_objective)
 
     result = runner.run(table_assignment_model, gecode)

@@ -1,22 +1,20 @@
 {
     "problems": [
       {
-        "problem": "table_assignment",
-        "path" : "../models/table_assignment/",
-        "model": "table_assignment_generic.mzn",
+        "problem": "bus_tour",
+        "path" : "../models/bus_tour/",
+        "model": "bus_tour.mzn",
         "data": [
-          "generic_5.dzn",
-          "generic_5_preferences.dzn"
-        ]
+        "bus_tour_3.dzn"
+      ]
       }
-
     ],
     "solvers": [
-      "chuffed"
+      "com.google.ortools.sat"
     ],
     "configurations": [
-      "leximin_pareto",
-      "leximin"
+      "leximin",
+      "rawls"
     ]
   }
   

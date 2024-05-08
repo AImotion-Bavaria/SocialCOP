@@ -8,7 +8,7 @@ from on_result_runner import OnResultRunner
 from util.social_mapping_reader import read_social_mapping, AGENTS_ARRAY, UTILITY_ARRAY
 UTILITARIAN_OBJECTIVE = "utilitarian_objective"
 
-def add_utilitarian_objective(instance : Instance, social_mapper):
+def utilitarian_objective(instance : Instance, social_mapper):
     instance.add_string(f"var int: {UTILITARIAN_OBJECTIVE};")
     instance.add_string(f"constraint {UTILITARIAN_OBJECTIVE} = sum({social_mapper[UTILITY_ARRAY]});")
 
@@ -21,7 +21,7 @@ def get_better_utilitarian(instance : Instance, res : Result, social_mapper = No
 
 def prepare_utilitarian_runner(social_mapping):
     simple_runner = SimpleRunner(social_mapping)
-    simple_runner.add(add_utilitarian_objective)
+    simple_runner.add(utilitarian_objective)
     simple_runner.add(optimize_utilitarian_objective)
     return simple_runner
 
@@ -42,7 +42,7 @@ if __name__ == "__main__":
 
     simple_runner = SimpleRunner(social_mapping)
     # insert all decision variables to calculate the utilitarian objective for this model
-    simple_runner.add(add_utilitarian_objective)
+    simple_runner.add(utilitarian_objective)
     # actually optimize for the utilitarian objective
     simple_runner.add(optimize_utilitarian_objective)
     result = simple_runner.run(social_selection_model, gecode)
@@ -51,6 +51,6 @@ if __name__ == "__main__":
     # solve the same model using an on result runner 
     on_result_runner = OnResultRunner(social_mapping)
     # insert all decision variables to calculate the utilitarian objective for this model
-    on_result_runner.add(add_utilitarian_objective)
+    on_result_runner.add(utilitarian_objective)
     # optimize for the utilitarian objective using on result constraints
     on_result_runner.add_on_result_handler(optimize_utilitarian_objective)
