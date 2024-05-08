@@ -3,6 +3,8 @@
 set of int: Site;
 Site: hotel;
 array[Site,Site] of int: distance;
+var int: maxTourDuration;
+constraint maxTourDuration = sum(s1, s2 in Site where s1 < s2) (max(distance[s1, s2], distance[s2, s1]) );  
 
 array[Site] of int: durationOfVisit;
 array[Site] of int: siteOpens;
@@ -30,7 +32,8 @@ constraint forall (i in Site where i = next[i]) (
   startOfVisit[i]=0 /\ arrivalTime[i]=0
 );
 
-var int: travel_time = sum (i in Site where i != next[i]) (distance[i,next[i]]);
+var int: travel_time;
+constraint travel_time = sum (i in Site where i != next[i]) (distance[i,next[i]]);
 
 int: num_passengers;
 set of int: Passenger = 1..num_passengers;
@@ -48,15 +51,21 @@ constraint number_of_visited_sites = sum (s in Site where s != hotel) (s != next
 int: num_sites = card(Site);
 constraint passenger_scores  = 
 array2d(Passenger,1..num_category,
-[ if i=1 then sum (s in Site where s != hotel /\ s != next[s]) (site_score[p,s])
-  elseif i=2 then (num_sites - abs(preferred_n_sites[p] - number_of_visited_sites))
-  else min(preferred_travel_time[p] - travel_time,0)
+[ if i=1 then 
+      sum (s in Site where s != hotel /\ s != next[s]) (site_score[p,s])
+  elseif i=2 then 
+      (num_sites - abs(preferred_n_sites[p] - number_of_visited_sites))
+  else  
+      % if travel_time (90) > preferred_max_travel_time (60) -> reduce some points
+      % if preferred_max_travel_time (90) > travel_time (60) -> we are fully happy
+      maxTourDuration - max(travel_time - preferred_travel_time[p], 0)
   endif
 | p in Passenger, i in 1..num_category]);
 
-array[Passenger] of var -1000..1000: score;
+array[Passenger] of var -10000..10000: score;
 constraint score  =
 [  sum([ preference_weights[p,i] * passenger_scores[p,i] | i in 1..num_category])
   | p in Passenger,  ];
   
- 
+
+% solve maximize sum(passenger_scores); 

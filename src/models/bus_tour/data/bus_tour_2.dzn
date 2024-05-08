@@ -22,7 +22,7 @@ site_score = [| 100, 50, 75, 0, 0, 0
               | 0,0,0,4,5,0|];
 preferred_n_sites = [ 2, 2, 2, 2 ];
 preferred_travel_time = [ 30, 10, 60, 60 ];
-preference_weights = [| 100,1,1
+preference_weights = [| 100,10,1
                       | 100,1,1
-                      | 100,1,1
+                      | 100,10,1
                       | 100,1,1 |];
