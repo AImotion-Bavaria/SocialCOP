@@ -54,7 +54,7 @@ array2d(Passenger,1..num_category,
   endif
 | p in Passenger, i in 1..num_category]);
 
-array[Passenger] of var int: score;
+array[Passenger] of var -1000..1000: score;
 constraint score  =
 [  sum([ preference_weights[p,i] * passenger_scores[p,i] | i in 1..num_category])
   | p in Passenger,  ];

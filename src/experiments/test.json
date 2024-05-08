@@ -1,5 +1,14 @@
 {
-    "problems": [
+  "problems": [
+    {
+      "problem": "table_assignment",
+      "path" : "../models/table_assignment/",
+      "model": "table_assignment_generic.mzn",
+      "data": [
+        "generic_3.dzn",
+        "generic_3_preferences.dzn"
+      ]
+    },
       {
         "problem": "bus_tour",
         "path" : "../models/bus_tour/",
@@ -7,14 +16,31 @@
         "data": [
         "bus_tour_3.dzn"
       ]
-      }
-    ],
+      },
+
+        {
+          "problem": "scheduling",
+          "path" : "../models/scheduling/",
+          "model": "scheduling_standalone.mzn",
+          "data": [
+          "scheduling_5.dzn"
+        ]
+        },
+        {
+          "problem": "project_assignment",
+          "path" : "../models/project_assignment/",
+          "model": "project_assignment_core.mzn",
+          "data": [
+          "project_assignment_4.dzn"
+        ]
+        }
+  ],
     "solvers": [
       "com.google.ortools.sat"
     ],
     "configurations": [
-      "leximin",
-      "rawls"
+      "leximin"
+   
     ]
   }
   

@@ -1,6 +1,5 @@
  % A student-project matching
 include "globals.mzn";
-include "../generic_social_welfare.mzn";
 
 int: n; % number of students (which take the role of agents here)
 set of int: STUDENT = 1..n;

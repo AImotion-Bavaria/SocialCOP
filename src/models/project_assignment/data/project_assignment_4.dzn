@@ -16,9 +16,9 @@ studentProjectRanks =
   2, 3, 5, 6, 1, 4|];
   
 % Random min and max values for minPerLecturer and maxPerLecturer
-minPerLecturer = 4; 
+minPerLecturer = 1; 
 maxPerLecturer = 10; 
 
 % Random min and max values for minPerProject and maxPerProject
-minPerProject = 4; 
+minPerProject = 1; 
 maxPerProject = 10;
