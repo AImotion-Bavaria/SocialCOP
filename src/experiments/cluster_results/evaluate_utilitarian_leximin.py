@@ -15,6 +15,7 @@ def calculate_gini(array):
 
 # Define the path to the SQLite database file
 db_file = os.path.join(os.path.dirname(__file__), 'results_leximin_utilitarian_rawls.db')
+write_file = os.path.join(os.path.dirname(__file__), 'gini_results_leximin_utilitarian_rawls.db')
 
 # Define the path to the SQL query file
 sql_file = os.path.join(os.path.dirname(__file__), 'compare_leximin_utilitarian_rawls.sql')
@@ -23,7 +24,7 @@ sql_file = os.path.join(os.path.dirname(__file__), 'compare_leximin_utilitarian_
 with open(sql_file, 'r') as f:
     sql_query = f.read()
 
-# Execute the SQL query and calculate the geometric mean
+# Execute the SQL query and store results
 with sqlite3.connect(db_file) as conn:
     cursor = conn.cursor()
     cursor.execute(sql_query)
@@ -32,13 +33,24 @@ with sqlite3.connect(db_file) as conn:
     utilitarian_utility_vector=[row[9] for row in rows]
     rawls_utility_vector=[row[13] for row in rows]
     
+# Prepare database to store overall result    
+if os.path.exists(write_file): 
+    os.remove(write_file)  # Delete previous state of resultfile
+with sqlite3.connect(write_file) as conn_write: #store sql result in resultfile
+        cursor_write = conn_write.cursor()
+        cursor_write.execute("CREATE TABLE IF NOT EXISTS results (model TINYTEXT,data_files TINYTEXT,sum_utility_leximin INT,max_leximin INT,min_leximin INT,leximin_utility_vector TINYTEXT,sum_utility_utilitarian INT,max_utilitarian INT,min_utilitarian INT,utilitarian_utility_vector TINYTEXT,sum_utility_rawls INT,max_rawls INT,min_rawls INT,rawls_utility_vector TINYTEXT)")
+        for row in rows:
+            cursor_write.execute("INSERT INTO results VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)", row)
+            conn_write.commit()
+        cursor_write.execute("ALTER TABLE results ADD COLUMN gini_leximin REAL")
+        cursor_write.execute("ALTER TABLE results ADD COLUMN gini_utilitarian REAL")
+        cursor_write.execute("ALTER TABLE results ADD COLUMN gini_rawls REAL")
 
-#tables to store results for every column
+#tables to store both results for every column
 gini_results_leximin=[]
 gini_results_utilitarian=[]
 gini_results_rawls=[]
-
-#for every result    
+#for every result
 for element in range(len(leximin_utility_vector)):
     leximin_utility = json.loads(leximin_utility_vector[element])
     utilitarian_utility = json.loads(utilitarian_utility_vector[element])
@@ -46,6 +58,14 @@ for element in range(len(leximin_utility_vector)):
     gini_results_leximin.append(calculate_gini(leximin_utility))
     gini_results_utilitarian.append(calculate_gini(utilitarian_utility))
     gini_results_rawls.append(calculate_gini(rawls_utility))
-    print("Gini at column: ",element,"leximin:",gini_results_leximin[element],"utilitarian:",gini_results_utilitarian[element], "rawls:", gini_results_rawls[element], "\n")
+    print("Gini at column: ",element,"leximin:",gini_results_leximin[element],"utilitarian:",gini_results_utilitarian[element], "rawls:", gini_results_rawls[element])
+        
+    # Append the calculated Gini results to resultfile
+    cursor_write.execute("UPDATE results SET gini_leximin = COALESCE(gini_leximin, 0) + ?, \
+                    gini_utilitarian = COALESCE(gini_utilitarian, 0) + ?, \
+                    gini_rawls = COALESCE(gini_rawls, 0) + ? \
+                    WHERE rowid = ?", (gini_results_leximin[element], gini_results_utilitarian[element], gini_results_rawls[element], element+1))
+        
+    conn_write.commit()
 
 
