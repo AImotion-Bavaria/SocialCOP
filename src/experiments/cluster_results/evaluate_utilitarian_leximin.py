@@ -32,13 +32,15 @@ with sqlite3.connect(db_file) as conn:
     leximin_utility_vector=[row[5] for row in rows]
     utilitarian_utility_vector=[row[9] for row in rows]
     rawls_utility_vector=[row[13] for row in rows]
+
+    
     
 # Prepare database to store overall result    
 if os.path.exists(write_file): 
     os.remove(write_file)  # Delete previous state of resultfile
 with sqlite3.connect(write_file) as conn_write: #store sql result in resultfile
         cursor_write = conn_write.cursor()
-        cursor_write.execute("CREATE TABLE IF NOT EXISTS results (model TINYTEXT,data_files TINYTEXT,sum_utility_leximin INT,max_leximin INT,min_leximin INT,leximin_utility_vector TINYTEXT,sum_utility_utilitarian INT,max_utilitarian INT,min_utilitarian INT,utilitarian_utility_vector TINYTEXT,sum_utility_rawls INT,max_rawls INT,min_rawls INT,rawls_utility_vector TINYTEXT)")
+        cursor_write.execute("CREATE TABLE IF NOT EXISTS results (model TINYTEXT,data_files TINYTEXT,sum_utility_leximin REAL,max_leximin REAL,min_leximin REAL,leximin_utility_vector TINYTEXT,sum_utility_utilitarian REAL,max_utilitarian REAL,min_utilitarian REAL,utilitarian_utility_vector TINYTEXT,sum_utility_rawls REAL,max_rawls REAL,min_rawls REAL,rawls_utility_vector TINYTEXT)")
         for row in rows:
             cursor_write.execute("INSERT INTO results VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)", row)
             conn_write.commit()
@@ -68,4 +70,21 @@ for element in range(len(leximin_utility_vector)):
         
     conn_write.commit()
 
+#draw diagram:
+import matplotlib.pyplot as plt
+data=[gini_results_utilitarian, gini_results_rawls, gini_results_leximin]
+labels = ['Utilitarian', 'Rawlsian', 'Leximin']
+num_datasets = len(data)
+
+bar_width = 0.2
+
+for i, dataset in enumerate(data):
+    plt.bar(np.arange(len(dataset)) + i * bar_width, dataset, bar_width, label=labels[i])
+
+plt.xlabel('Instance', fontsize=12)
+plt.ylabel('Gini Index', fontsize=12)
+plt.xticks(np.arange(len(data[0])))
+plt.legend(fontsize=12)
+#plt.show()
+plt.savefig('./src/experiments/cluster_results/gini_viz.pdf')
 
