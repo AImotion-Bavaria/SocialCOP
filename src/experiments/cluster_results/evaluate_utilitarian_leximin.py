@@ -74,7 +74,6 @@ for element in range(len(leximin_utility_vector)):
 import matplotlib.pyplot as plt
 data=[gini_results_utilitarian, gini_results_rawls, gini_results_leximin]
 labels = ['Utilitarian', 'Rawlsian', 'Leximin']
-num_datasets = len(data)
 
 bar_width = 0.2
 
