@@ -9,15 +9,15 @@ from util.social_mapping_reader import read_social_mapping, AGENTS_ARRAY, UTILIT
 UTILITARIAN_OBJECTIVE = "utilitarian_objective"
 
 def utilitarian_objective(instance : Instance, social_mapper):
-    instance.add_string(f"var int: {UTILITARIAN_OBJECTIVE};")
+    instance.add_string(f"\n var int: {UTILITARIAN_OBJECTIVE};")
     instance.add_string(f"constraint {UTILITARIAN_OBJECTIVE} = sum({social_mapper[UTILITY_ARRAY]});")
 
 def optimize_utilitarian_objective(instance : Instance, social_mapper = None):
-    instance.add_string(f"solve maximize {UTILITARIAN_OBJECTIVE};")
+    instance.add_string(f"\n solve maximize {UTILITARIAN_OBJECTIVE};")
 
 def get_better_utilitarian(instance : Instance, res : Result, social_mapper = None):
     # enforce that the next solution needs to be better than the current one
-    instance.add_string(f"constraint {UTILITARIAN_OBJECTIVE} > {res[UTILITARIAN_OBJECTIVE]};")
+    instance.add_string(f"\n constraint {UTILITARIAN_OBJECTIVE} > {res[UTILITARIAN_OBJECTIVE]};")
 
 def prepare_utilitarian_runner(social_mapping):
     simple_runner = SimpleRunner(social_mapping)

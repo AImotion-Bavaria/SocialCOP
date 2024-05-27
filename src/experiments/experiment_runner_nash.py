@@ -15,15 +15,16 @@ sys.path.append(src)
 from experiment import Experiment, parse_json
 from simple_runner import SimpleRunner
 from minizinc import Model, Solver, Result, Status
-from utilitarian import prepare_utilitarian_runner
+from utilitarian import optimize_utilitarian_objective, prepare_utilitarian_runner, utilitarian_objective
 from envy_freeness import prepare_envy_free_runner, prepare_envy_min_runner, ENVY_PAIRS, envy_freeness_mixin, enforce_envy_freeness, SHARE_FUNCTION
 from leximin_runner import prepare_leximin_runner, LeximinRunner
 from pareto_runner import ParetoRunner, pareto_only_nondom_mixin, ParetoUtilityTracker
 from rawls import prepare_rawls_runner
-from nash import optimize_nash_objective, prepare_nash_runner
+from nash import get_better_nash, nash_objective, prepare_nash_runner
 
 from util.social_mapping_reader import read_social_mapping, UTILITY_ARRAY
 from util.mzn_debugger import create_debug_folder
+from on_result_runner import OnResultRunner
 
 base_dir = os.path.dirname(__file__)
 result_dir = os.path.join(base_dir, 'results')
@@ -59,12 +60,13 @@ def utilitarian_envy_free(model : Model, social_mapping : dict, solver : Solver)
     return result
 
 def utilitarian_nash(model : Model, social_mapping: dict, solver : Solver):
-    simple_runner : SimpleRunner = prepare_utilitarian_runner(social_mapping)
-    simple_runner.model.add(optimize_nash_objective)
-    simple_runner.timeout = TIME_LIMIT_EVAL
-
-    result = simple_runner.run(model, solver)
-    return result
+    on_result_runner = OnResultRunner(social_mapping)
+    on_result_runner.model += [utilitarian_objective, nash_objective, optimize_utilitarian_objective]
+    on_result_runner.add_on_result_handler(get_better_nash)
+    #on_result_runner.debug = True
+    #on_result_runner.debug_dir = create_debug_folder(os.path.dirname(__file__))
+    result = on_result_runner.run(model)
+    return result[-1]
 
 def envy_min(model : Model, social_mapping : dict, solver : Solver):
     if not SHARE_FUNCTION in social_mapping: # it is not  a division problem
@@ -119,7 +121,7 @@ configurations_map = {
       "envy_free": envy_free,
       "envy_min": envy_min,
       "nash": nash,
-      "utilitarian_nash": nash
+      "utilitarian_nash": utilitarian_nash
 }
 
 import sqlite3

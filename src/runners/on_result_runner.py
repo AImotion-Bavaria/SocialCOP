@@ -27,7 +27,7 @@ class OnResultRunner(SimpleRunner):
         previous_solutions = [res]
                  
         solutions = []
-        while res.status == Status.SATISFIED:
+        while res.status != Status.UNSATISFIABLE:
             solutions.append(res)
             logging.info(f"Found solution: {res}") 
 
@@ -35,8 +35,14 @@ class OnResultRunner(SimpleRunner):
                 for on_result_handler in self.on_result_handlers:
                     on_result_handler(child, res)
                 if self.debug:
-                    log_and_debug_generated_files(child)
-                res = child.solve(timeout=self.timeout)
+                    log_and_debug_generated_files(child, "on_result_runner_child", 0, self.debug_dir)
+                try:
+                    res = child.solve(timeout=self.timeout)
+                    if res.status != Status.UNSATISFIABLE:
+                        previous_solutions = [res]
+                except:
+                    print("Error")
+
         return previous_solutions
 
 if __name__ == "__main__":    
