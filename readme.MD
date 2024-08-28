@@ -37,6 +37,7 @@
       <ul>
         <li><a href="#prerequisites">Prerequisites</a></li>
         <li><a href="#installation">Installation</a></li>
+        <li><a href="#mapping">Mapping</a></li>
       </ul>
     </li>
     <li><a href="#usage">Usage</a></li>
@@ -91,6 +92,7 @@ Example:
  "main_variables": ["assigned"]
  }
 ```
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- USAGE EXAMPLES -->
 ## Usage
@@ -106,16 +108,15 @@ Envy-Freeness is given if no agent envies the distribution of another agent. To 
     result = simple_runner.run(model, solver)
     return result 
 ```
-#### Leximin
-Leximin is searching for the best result for the worst-off agent. To integrate it into your existing MiniZinc model, you can use the following code.
-```def leximin(model: Model, social_mapping, solver: Solver):
-    simple_runner = prepare_leximin_runner(social_mapping)
-    simple_runner.debug = True
-    simple_runner.debug_dir = create_debug_folder(os.path.dirname(__file__))
+#### Rawls Runner
+Rawls runner is searching for the best result for the worst-off agent. To integrate it into your existing MiniZinc model, you can use the following code.
+```def rawls(model: Model, social_mapping, solver: Solver):
+    simple_runner = prepare_rawls_runner(social_mapping)
     simple_runner.timeout = TIME_LIMIT_EVAL
     result = simple_runner.run(model, solver)
     return result
 ```
+
 #### Nash
 The Nash welfare is searching for the highest product of utilities. To integrate it into your existing MiniZinc model, you can use the following code.
 ```def nash(model : Model, social_mapping : dict, solver : Solver):
@@ -124,16 +125,18 @@ The Nash welfare is searching for the highest product of utilities. To integrate
     result = simple_runner.run(model, solver)
     return result
 ```
-#### Rawls Runner
-This runner is iteratively searching for leximin solution for all agents. The worst-off agent is maximized, followed by the second-worst agent in the next iteration. This is continued until all utilities for agents are optimized. To integrate it into your existing MiniZinc model, you can use the following code.
-```def rawls(model: Model, social_mapping, solver: Solver):
-    simple_runner = prepare_rawls_runner(social_mapping)
+#### Leximin
+This runner is iteratively searching for rawls solution for all agents. The worst-off agent is maximized, followed by the second-worst agent in the next iteration. This is continued until all utilities for agents are optimized. To integrate it into your existing MiniZinc model, you can use the following code.
+```def leximin(model: Model, social_mapping, solver: Solver):
+    simple_runner = prepare_leximin_runner(social_mapping)
+    simple_runner.debug = True
+    simple_runner.debug_dir = create_debug_folder(os.path.dirname(__file__))
     simple_runner.timeout = TIME_LIMIT_EVAL
     result = simple_runner.run(model, solver)
     return result
 ```
 #### Utilitarian Runner
-Utalitarianism is searching for the result with the maximum overall utility. To integrate it into your existing MiniZinc model, you can use the following code.
+Utilitarianism is searching for the result with the maximum overall utility. To integrate it into your existing MiniZinc model, you can use the following code.
 ```def utilitarian(model : Model, social_mapping : dict, solver : Solver):
     simple_runner = prepare_utilitarian_runner(social_mapping)
     if SHARE_FUNCTION in social_mapping: # it is a division problem - I want to record envy counts as well
@@ -188,9 +191,8 @@ Project Link: [https://github.com/AImotion-Bavaria/SocialCOP](https://github.com
 <!-- ACKNOWLEDGMENTS -->
 ## Acknowledgments
 
-* []()
-* []()
-* []()
+* []() This project is being carried out within the Master of Applied Research in Engineering Sciences program of Technische Hochschule Ingolstadt.
+
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -199,7 +201,7 @@ Project Link: [https://github.com/AImotion-Bavaria/SocialCOP](https://github.com
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 [contributors-shield]: https://img.shields.io/github/contributors/AImotion-Bavaria/SocialCOP.svg?style=for-the-badge
-[contributors-url]: https://github.com/AImotion-Bavaria/SocialCOP/graphs/contributorsSocialCOP/graphs/contributors
+[contributors-url]: https://github.com/AImotion-Bavaria/SocialCOP/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/AImotion-Bavaria/SocialCOP.svg?style=for-the-badge
 [forks-url]: https://github.com/AImotion-Bavaria/SocialCOP/network/members
 [stars-shield]: https://img.shields.io/github/stars/AImotion-Bavaria/SocialCOP.svg?style=for-the-badge
