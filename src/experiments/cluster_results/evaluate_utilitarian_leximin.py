@@ -78,7 +78,6 @@ plt.figure()
 fig, ax = plt.subplots(1, 1, figsize=(8, 3.5))
 data=[gini_results_utilitarian, gini_results_rawls, gini_results_leximin]
 labels = ['Utilitarian', 'Rawlsian', 'Leximin']
-num_datasets = len(data)
 
 bar_width = 0.2
 
