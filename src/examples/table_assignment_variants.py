@@ -72,6 +72,18 @@ def leximin(model : Model, solver : Solver, social_mapping):
     print(result) 
     print("--"*50)
 
+def leximin_envyfree(model : Model, solver : Solver, social_mapping):
+    logging.info("Leximin Envy Free ...")
+    leximin_runner = LeximinRunner(social_mapping)
+    leximin_runner.debug = False
+    leximin_runner.debug_dir = debug_dir
+
+    leximin_runner.model += [envy_freeness_mixin]
+    leximin_runner.model += [enforce_envy_freeness]
+    result = leximin_runner.run(table_assignment_model, gecode)
+    print(result) 
+    print("--"*50)
+
 def leximin_pareto(model : Model, solver : Solver, social_mapping):
     logging.info("Leximin ...")
     leximin_runner = LeximinRunner(social_mapping)
@@ -128,12 +140,15 @@ if __name__ == "__main__":
     #minimize_envy(table_assignment_model, gecode, social_mapping)
 
     # 3. Enforce envy-freeness, maximize utilitarian
-    maximize_utilitarian_welfare_envyfree(table_assignment_model, gecode, social_mapping)
+    #maximize_utilitarian_welfare_envyfree(table_assignment_model, gecode, social_mapping)
 
     # 4. A Leximin run
     #leximin(table_assignment_model, gecode, social_mapping)
 
-    # 5. A Pareto run 
+    # 5. An envy-free Leximin run
+    leximin_envyfree(table_assignment_model, gecode, social_mapping)
+
+    # 6. A Pareto run 
     #pareto(table_assignment_model, gecode, social_mapping)
 
 

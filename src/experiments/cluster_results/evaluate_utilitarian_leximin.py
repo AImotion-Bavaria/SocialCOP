@@ -71,7 +71,11 @@ for element in range(len(leximin_utility_vector)):
     conn_write.commit()
 
 #draw diagram:
+
+
 import matplotlib.pyplot as plt
+plt.figure()
+fig, ax = plt.subplots(1, 1, figsize=(8, 3.5))
 data=[gini_results_utilitarian, gini_results_rawls, gini_results_leximin]
 labels = ['Utilitarian', 'Rawlsian', 'Leximin']
 num_datasets = len(data)
@@ -85,6 +89,9 @@ plt.xlabel('Instance', fontsize=12)
 plt.ylabel('Gini Index', fontsize=12)
 plt.xticks(np.arange(len(data[0])))
 plt.legend(fontsize=12)
+plt.tight_layout()
 #plt.show()
-plt.savefig('./src/experiments/cluster_results/gini_viz.pdf')
+import os
+
+plt.savefig(os.path.join(os.path.dirname(__file__), 'gini_viz.pdf'))
 
