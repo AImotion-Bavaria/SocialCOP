@@ -4,15 +4,15 @@ from gymnasium import spaces
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_checker import check_env
 from stable_baselines3.common.vec_env import DummyVecEnv
-from gymnasium.spaces import Dict, Box, Discrete
 import os
 import sys
 from torch.utils.tensorboard import SummaryWriter
 sys.path.append('..')
 from logging_tensorboard import TensorboardCallback
+from gymnasium.spaces import Dict, Box, Discrete
 
-models_dir = "src/stable-baselines/agents/models/PPO_non_det_gini"
-file_dir = "src/stable-baselines/agents/models/PPO_non_det_gini.zip"
+models_dir = "src/stable-baselines/agents/models/bedarf_received"
+file_dir = "src/stable-baselines/agents/models/bedarf_received.zip"
 logdir = "src/stable-baselines/logs"
 
 if not os.path.exists(models_dir):
@@ -23,8 +23,6 @@ if not os.path.exists(logdir):
 
 def calculate_gini(array):
     if np.all(array==0):
-        return 0
-    if np.sum(array)==0:
         return 0
     array = np.sort(np.array(array)).astype(np.float16)  # Cast to sorted numpy array
     index = np.arange(1, array.shape[0] + 1)  # Index per array element
@@ -37,8 +35,7 @@ class GiniEnv(gym.Env):
     def __init__(self, grid_size=10, render_mode=None):
         super(GiniEnv, self).__init__()
         self.grid_size = grid_size
-        self.action_space = Discrete(self.grid_size) 
-        #self.observation_space = spaces.Box(low=0, high=500, shape=(4,self.grid_size), dtype=np.int32)
+        self.action_space = spaces.Discrete(self.grid_size) 
         self.observation_space = Dict({
             "required": Box(low=0, high=6, shape=(self.grid_size,), dtype=int),
             "received": Box(low=0, high=500, shape=(self.grid_size,), dtype=int),
@@ -62,6 +59,7 @@ class GiniEnv(gym.Env):
         return self.observation, {}
 
     def step(self, action):
+
         self.observation["received"][action] +=  min(self.observation["cur_val"],self.observation["required"][action])
         self.observation["valuation"]=[0] * self.grid_size
         if(self.observation["required"][action]!=0):
@@ -71,7 +69,10 @@ class GiniEnv(gym.Env):
         
         
         self.gini_index = calculate_gini(self.observation["received"])
-        reward = -100*self.gini_index + sum(self.observation["received"]) + sum(self.observation["valuation"]) 
+        if(self.observation["received"][action]!=0):
+            reward = self.observation["required"][action]/self.observation["received"][action]
+        else:
+            reward = self.observation["required"][action]
        
         self.steps += 1
         terminated = self.steps >= 50 
@@ -86,7 +87,6 @@ class GiniEnv(gym.Env):
         #value[0] = np.random.randint(1, 5) #aktuelle verteilung
         self.observation["cur_val"] = np.random.randint(1, 5) #aktuelle verteilung
         self.bedarf()
-        #self.array[0] = np.random.randint(0, 5, size=self.grid_size).astype(np.int32)
         return self.observation, reward, terminated, truncated, info
     
     def bedarf(self):
@@ -106,7 +106,7 @@ class GiniEnv(gym.Env):
 def train():
     #model = PPO("MlpPolicy", env, verbose=1).learn(1000000)
     model = PPO('MultiInputPolicy', env, verbose=1, ent_coef=0.1, tensorboard_log=logdir)
-    model.learn(total_timesteps=1000000, tb_log_name="PPO_non_det_gini", callback=TensorboardCallback())
+    model.learn(total_timesteps=1000000, tb_log_name="bedarf_received", callback=TensorboardCallback())
     model.save(models_dir)
 env = DummyVecEnv([lambda: GiniEnv(grid_size=5, render_mode='console')]) 
 train()
@@ -116,14 +116,14 @@ train()
 model = PPO.load(file_dir, env=env)
 
 obs = env.reset()
-writer = SummaryWriter("src/stable-baselines/logs/test_custom_env_gini")
+writer = SummaryWriter("src/stable-baselines/logs/bedarf_received")
 for step in range(100):
     action, _ = model.predict(obs, deterministic=True)
     obs, reward, done, info = env.step(action)
     print(f' reward:{reward} Predicted action: {action} received: {info[-1]["received"]}, valuation: {info[-1]["valuation"]} value: {info[-1]["value"]}') 
     writer.add_scalar("Test/Reward", reward, step)
-    writer.add_scalar("Test/Sum_rec", info[-1]["sum_rec"], step)
     writer.add_scalar("Test/Gini_Index", calculate_gini(info[-1]["received"]), step)
+    writer.add_scalar("Test/Sum_rec", info[-1]["sum_rec"], step)
     env.render()
     if done.any(): 
         print("reward", reward, "last call of episode", info[-1]["terminal_observation"], "Gini Index: ", calculate_gini(info[-1]["received"]))  # always use last element
