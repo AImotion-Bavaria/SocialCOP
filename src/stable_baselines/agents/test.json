@@ -1,0 +1,29 @@
+{
+    "train": [
+      {
+        "train_agent": "gini_env",
+        "iterations" : 10,
+        "model_name" : "PPO",
+        "grid_size" : 5
+      }
+    ],
+      "test": [
+        {
+        "test_agent": "gini_env",
+        "iterations" : 10,
+        "model_name" : "PPO",
+        "start_value" : [2,2,2,2,2]
+        },
+        {
+        "test_agent": "greedy_env",
+        "iterations" : 10,
+        "model_name" : "PPO",
+        "start_value" : [5,2,5,2,5]
+        }    
+    ],
+      "init_vals": [
+        [1,2,3,4,5],
+        [2,2,2,2,2]
+      ]
+    }
+    

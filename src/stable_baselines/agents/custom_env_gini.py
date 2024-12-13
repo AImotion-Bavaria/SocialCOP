@@ -34,8 +34,9 @@ def calculate_gini(array):
 class GiniEnv(gym.Env):
     metadata = {'render.modes': ['console']}
 
-    def __init__(self, grid_size=10, render_mode=None):
+    def __init__(self, grid_size=5, start=None, render_mode=None):
         super(GiniEnv, self).__init__()
+        self.start=start
         self.grid_size = grid_size
         self.action_space = Discrete(self.grid_size) 
         #self.observation_space = spaces.Box(low=0, high=500, shape=(4,self.grid_size), dtype=np.int32)
@@ -49,19 +50,28 @@ class GiniEnv(gym.Env):
         self.previous_valuations = np.zeros(self.grid_size)
         self.reset()
 
-    def reset(self, seed=None, options=None ):
+    def reset(self, seed=None, options=None):
         self.index = 0
-        self.observation = {
-            "required": np.random.randint(0, 5, size=self.grid_size).astype(np.int32),
-            "received": np.zeros(self.grid_size),
-            "valuation": np.zeros(self.grid_size, dtype=np.int32),
-            "cur_val": np.random.randint(1, 5)
+        if self.start==None:
+            self.observation = {
+                "required": np.random.randint(0, 5, size=self.grid_size).astype(np.int32),
+                "received": np.zeros(self.grid_size),
+                "valuation": np.zeros(self.grid_size, dtype=np.int32),
+                "cur_val": np.random.randint(1, 5)
+            }
+        else:
+            self.observation = {
+                "required": np.array(self.start),
+                "received": np.zeros(self.grid_size),
+                "valuation": np.zeros(self.grid_size, dtype=np.int32),
+                "cur_val": np.random.randint(1, 5)
         }
         self.gini_index = calculate_gini(self.observation["received"])
         self.steps = 0
         return self.observation, {}
 
     def step(self, action):
+        self.action=action
         self.observation["received"][action] +=  min(self.observation["cur_val"],self.observation["required"][action])
         self.observation["valuation"]=[0] * self.grid_size
         if(self.observation["required"][action]!=0):
@@ -71,23 +81,23 @@ class GiniEnv(gym.Env):
         
         
         self.gini_index = calculate_gini(self.observation["received"])
-        reward = -100*self.gini_index + sum(self.observation["received"]) + sum(self.observation["valuation"]) 
+        self.reward = -100*self.gini_index + sum(self.observation["received"]) + sum(self.observation["valuation"]) 
        
         self.steps += 1
         terminated = self.steps >= 50 
         truncated=False
-        info={}
-        info["required"] = self.observation["required"]
-        info["received"] = self.observation["received"]
-        info["valuation"] = self.observation["valuation"]
-        info["value"] = self.observation["cur_val"]
-        info["gini"] = self.gini_index
-        info["sum_rec"] = sum(self.observation["received"])
+        self.info={}
+        self.info["required"] = self.observation["required"]
+        self.info["received"] = self.observation["received"]
+        self.info["valuation"] = self.observation["valuation"]
+        self.info["value"] = self.observation["cur_val"]
+        self.info["gini"] = self.gini_index
+        self.info["sum_rec"] = sum(self.observation["received"])
         #value[0] = np.random.randint(1, 5) #aktuelle verteilung
         self.observation["cur_val"] = np.random.randint(1, 5) #aktuelle verteilung
         self.bedarf()
         #self.array[0] = np.random.randint(0, 5, size=self.grid_size).astype(np.int32)
-        return self.observation, reward, terminated, truncated, info
+        return self.observation, self.reward, terminated, truncated, self.info
     
     def bedarf(self):
         bedarf = np.zeros(self.grid_size)
@@ -98,37 +108,65 @@ class GiniEnv(gym.Env):
 
     def render(self, mode='console'):
         if self.render_mode == 'console':
-            print(f"reward:{reward} Predicted action: {action} received: {info[-1]['received']}, valuation: {info[-1]['valuation']} value: {info[-1]['value']}")
+            print(f"reward:{self.reward} Predicted action: {self.action} received: {self.info['received']}, valuation: {self.info['valuation']} value: {self.info['value']}")
 
     def close(self):
         pass
+    
+    def test(self, iterations=100, filedir=file_dir, start=[1,2,3,4,5], model_name=PPO):
+        env = DummyVecEnv([lambda: GiniEnv(grid_size=len(start), render_mode='console', start=start)]) 
+        #train()
+
+        #test
+        #test_env = DummyVecEnv([lambda: GiniEnv(grid_size=5, render_mode='console')])
+        model = model_name.load(filedir, env=env)
+
+        obs = env.reset()
+        writer = SummaryWriter("src/stable-baselines/logs/test_custom_env_gini")
+        for step in range(iterations):
+            action, _ = model.predict(obs, deterministic=True)
+            obs, reward, done, info = env.step(action)
+            print(f' reward:{reward} Predicted action: {action} received: {info[-1]["received"]}, valuation: {info[-1]["valuation"]} value: {info[-1]["value"]}') 
+            writer.add_scalar("Test/Reward", reward, step)
+            writer.add_scalar("Test/Sum_rec", info[-1]["sum_rec"], step)
+            writer.add_scalar("Test/Gini_Index", calculate_gini(info[-1]["received"]), step)
+            env.render()
+            if done.any(): 
+                print("reward", reward, "last call of episode", info[-1]["terminal_observation"], "Gini Index: ", calculate_gini(info[-1]["received"]))  # always use last element
+                print("Episode finished.")
+                break
 
 def train():
+    env = DummyVecEnv([lambda: GiniEnv(grid_size=5, render_mode='console', start=[1, 2, 3, 4, 5])]) 
     #model = PPO("MlpPolicy", env, verbose=1).learn(1000000)
     model = PPO('MultiInputPolicy', env, verbose=1, ent_coef=0.1, tensorboard_log=logdir)
     model.learn(total_timesteps=1000000, tb_log_name="PPO_non_det_gini", callback=TensorboardCallback())
     model.save(models_dir)
-env = DummyVecEnv([lambda: GiniEnv(grid_size=5, render_mode='console')]) 
-train()
+    
+if __name__ == "__main__":
+    env=GiniEnv()
+    env.test()
+    #env = DummyVecEnv([lambda: GiniEnv(grid_size=5, render_mode='console', start=[1, 2, 3, 4, 5])]) 
+    #train()
 
-#test
-#test_env = DummyVecEnv([lambda: GiniEnv(grid_size=5, render_mode='console')])
-model = PPO.load(file_dir, env=env)
+    #test
+    #test_env = DummyVecEnv([lambda: GiniEnv(grid_size=5, render_mode='console')])
+    #model = PPO.load(file_dir, env=env)
 
-obs = env.reset()
-writer = SummaryWriter("src/stable-baselines/logs/test_custom_env_gini")
-for step in range(100):
-    action, _ = model.predict(obs, deterministic=True)
-    obs, reward, done, info = env.step(action)
-    print(f' reward:{reward} Predicted action: {action} received: {info[-1]["received"]}, valuation: {info[-1]["valuation"]} value: {info[-1]["value"]}') 
-    writer.add_scalar("Test/Reward", reward, step)
-    writer.add_scalar("Test/Sum_rec", info[-1]["sum_rec"], step)
-    writer.add_scalar("Test/Gini_Index", calculate_gini(info[-1]["received"]), step)
-    env.render()
-    if done.any(): 
-        print("reward", reward, "last call of episode", info[-1]["terminal_observation"], "Gini Index: ", calculate_gini(info[-1]["received"]))  # always use last element
-        print("Episode finished.")
-        break
+    #obs = env.reset()
+    #writer = SummaryWriter("src/stable-baselines/logs/test_custom_env_gini")
+    #for step in range(100):
+    #    action, _ = model.predict(obs, deterministic=True)
+     #   obs, reward, done, info = env.step(action)
+      #  print(f' reward:{reward} Predicted action: {action} received: {info[-1]["received"]}, valuation: {info[-1]["valuation"]} value: {info[-1]["value"]}') 
+       # writer.add_scalar("Test/Reward", reward, step)
+        #writer.add_scalar("Test/Sum_rec", info[-1]["sum_rec"], step)
+        #writer.add_scalar("Test/Gini_Index", calculate_gini(info[-1]["received"]), step)
+        #env.render()
+        #if done.any(): 
+        #    print("reward", reward, "last call of episode", info[-1]["terminal_observation"], "Gini Index: ", calculate_gini(info[-1]["received"]))  # always use last element
+         #   print("Episode finished.")
+          #  break
 
 
  
