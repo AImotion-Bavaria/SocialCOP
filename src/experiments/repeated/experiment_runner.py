@@ -5,7 +5,7 @@ import logging
 #Add src folder to python path
 import os
 
-src = dirname(os.path.join(os.path.dirname(__file__), '../'))
+src = dirname(os.path.join(os.path.dirname(__file__), '../../'))
 sys.path.append(src)
 
 from experiment import Experiment
