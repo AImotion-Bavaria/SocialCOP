@@ -31,8 +31,6 @@ sys.path.append('..')
 
 #print(optuna.__version__)
 
-
-
 def calculate_gini(array):
     if np.all(array==0):
         return 0
@@ -40,7 +38,6 @@ def calculate_gini(array):
     index = np.arange(1, array.shape[0] + 1)  # Index per array element
     n = array.shape[0]  # Number of array elements
     return ((np.sum((2 * index - n - 1) * array)) / (n * np.sum(array)))  # Gini coefficient
-
 
 class GiniEnv(gym.Env):
     metadata = {'render.modes': ['console']}
@@ -77,7 +74,7 @@ class GiniEnv(gym.Env):
 
     def reset(self, seed=None, options=None ):
         #print(self.num_timesteps)
-        self.index = self.index+1
+        self.index = self.index + 1
         if self.start==None:
             self.observation = {
                 "required": np.random.randint(0, 5, size=self.grid_size).astype(np.int32),
@@ -96,12 +93,12 @@ class GiniEnv(gym.Env):
         }
         self.gini_index = calculate_gini(self.observation["received"])
         self.steps = 0
-        steps= [[[2, 2, 2], [3, 3, 1], [1, 1, 1, 4], [1, 3, 2, 3], [1, 1, 1, 5]],
+        steps = [[[2, 2, 2], [3, 3, 1], [1, 1, 1, 4], [1, 3, 2, 3], [1, 1, 1, 5]],
                 [[5], [3, 3, 1], [1, 1, 1, 4], [1, 3, 2, 3], [1, 1, 1, 5]],
                 [[5, 1, 3], [3, 5, 1], [2, 4, 1, 1], [2, 3, 3, 4], [2, 1, 4, 1]],
                 [[5, 3, 1], [1, 5, 2], [3, 2, 2, 1], [2, 3, 2, 1], [5, 4, 5, 1]],
                 [[3, 5, 4], [2, 1, 4], [1, 1, 5, 1], [2, 5, 4, 1], [1, 2, 1, 3]]]
-        self.frequency=steps[self.index//5]
+        self.frequency = steps[self.index % 5]
         return self.observation, {}
 
     def step(self, action):
