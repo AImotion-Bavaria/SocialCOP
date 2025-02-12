@@ -83,6 +83,7 @@ def leximin_envyfree(model : Model, solver : Solver, social_mapping):
     result = leximin_runner.run(table_assignment_model, gecode)
     print(result) 
     print("--"*50)
+    return result
 
 def leximin_pareto(model : Model, solver : Solver, social_mapping):
     logging.info("Leximin ...")
