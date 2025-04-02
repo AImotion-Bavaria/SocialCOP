@@ -1,7 +1,7 @@
-Tables = {Table1, Table2, Table3};
-wanted_days = [{Mon}, {Mon}, {Mon}, {Mon}, {Mon}];
-wanted_number_days = [{1}, {1}, {4}, {4}, {4}];
+Tables = {Table1};
+wanted_days = [{Mon}, {}, {}, {}, {}];
+wanted_number_days = [{5}, {0}, {0}, {0}, {0}];
 wanted_breaks = [true, true, false, false, true];
 desired_partners = [{}, {}, {}, {}, {}];
 n_agents = 5;
-max_wfh_days = 4;
+max_wfh_days = 5;
