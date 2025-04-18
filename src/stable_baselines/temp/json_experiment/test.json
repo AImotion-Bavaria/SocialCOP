@@ -1,0 +1,34 @@
+{
+  "train":[
+     {
+        "train_agent":"gini_env",
+        "iterations":1,
+        "model_name":"PPO",
+        "grid_size":5,
+        "solver": "chuffed",
+        "problem": "table_assignment",
+        "path" : "../models/table_assignment/",
+        "model": "table_assignment_generic.mzn",
+        "data": [
+         "0_generic_preferences.dzn"
+        ] 
+      }
+     
+  ],
+  "test":[
+     {
+        "test_agent":"gini_env",
+        "iterations":1,
+        "model_name":"PPO",
+         "solver": "chuffed"
+     }
+     
+  ],
+  "solvers": [
+      "chuffed",
+      "gecode"
+    ],
+    "configurations": [
+      "rawls"
+    ]
+}

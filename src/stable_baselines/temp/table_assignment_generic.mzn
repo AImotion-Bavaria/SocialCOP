@@ -23,9 +23,9 @@ let {
   assigned_for_a
 ;
 
-array  [Agents] of int: weights;
+%array  [Agents] of int: weights;
 % Objective: Maximize the sum of weights of selected agents
-var int: total_weight = sum(a in Agents) (sum(d in Days) (assigned[a,d]) * weights[a]);
+%var int: total_weight = sum(a in Agents) (sum(d in Days) (assigned[a,d]) * weights[a]);
 
 % ----------------------------------------------
 % Generic preference-type definitions:
@@ -125,4 +125,4 @@ constraint forall(a in Agents) (
 array[Agents] of var -1000 .. 1000: utilities;
 constraint utilities = [share_utility(a, get_assigned_for(a)) + global_utility(a) | a in Agents];
 
-solve maximize sum(utilities)+total_weight;
+%solve maximize sum(utilities)+(1000*total_weight);

@@ -33,7 +33,7 @@ def calculate_gini(array):
 class GiniEnv(gym.Env):
     metadata = {'render.modes': ['console']}
 
-    def __init__(self, grid_size=5, render_mode=None, start="generic_preferences.dzn"):
+    def __init__(self, grid_size=5, render_mode=None, start="generic_preferences.dzn", solver="gecode"):
         super(GiniEnv, self).__init__()
         self.start=start
         self.grid_size = grid_size
@@ -47,6 +47,7 @@ class GiniEnv(gym.Env):
         })
         self.render_mode = render_mode 
         self.previous_valuations = np.zeros(self.grid_size)
+        self.solver = solver
         self.reset()
 
     def reset(self, seed=None, options=None ):
@@ -68,7 +69,7 @@ class GiniEnv(gym.Env):
 
         simple_agents = Model("src/stable_baselines/temp/table_assignment_generic.mzn")
         simple_agents.add_file("src/stable_baselines/temp/"+str(self.index%3)+"_"+self.start,parse_data=True)
-        gecode = Solver.lookup("gecode")
+        gecode = Solver.lookup(self.solver)
         #chuffed vergleich
         #agenten nach training permutieren --> experiment
         instance = Instance(gecode, simple_agents)
@@ -115,12 +116,12 @@ class GiniEnv(gym.Env):
         
     
     
-    def test(self,iterations=10, filedir=file_dir, start="generic_preferences.dzn", model_name=PPO):
+    def test(self,log_dir,iterations=10, file_dir=file_dir,  start="generic_preferences.dzn", model_name=PPO):
         env = DummyVecEnv([lambda: GiniEnv(grid_size=5, render_mode='console', start=start)]) 
         model = PPO.load(file_dir, env=env)
 
         obs = env.reset()
-        writer = SummaryWriter("src/stable_baselines/temp/logs/greedy_trained")
+        writer = SummaryWriter(log_dir)
         for step in range(100):
                 action, _ = model.predict(obs, deterministic=True)
                 obs, reward, done, info = env.step(action)
@@ -136,9 +137,9 @@ class GiniEnv(gym.Env):
     
    
 
-def train(env):
+def train(env, models_dir):
     model = PPO('MultiInputPolicy', env, verbose=1, ent_coef=0.1, tensorboard_log=logdir, n_steps=52, batch_size=64, n_epochs=10)
-    model.learn(total_timesteps=1000, tb_log_name="greedy", callback=TensorboardCallback())
+    model.learn(total_timesteps=10, tb_log_name="greedy", callback=TensorboardCallback())
     model.save(models_dir)
 
 if __name__ == "__main__":

@@ -1,7 +1,8 @@
 {
     "python.analysis.extraPaths": [
         "./src/runners",
-        "./src/util"
+        "./src/util",
+        "./src/stable_baselines"
     ],
     "python.testing.unittestArgs": [
         "-v",

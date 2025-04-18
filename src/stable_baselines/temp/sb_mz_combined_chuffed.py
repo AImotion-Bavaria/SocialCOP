@@ -12,8 +12,8 @@ from torch.utils.tensorboard import SummaryWriter
 from logging_tensorboard import TensorboardCallback
 from gymnasium.spaces import Dict, Box, Discrete
 
-models_dir = "src/stable_baselines/temp/models/trained_mz"
-file_dir = "src/stable_baselines/temp/models/trained_mz.zip"
+models_dir = "src/stable_baselines/temp/models/trained_mz_chuffed"
+file_dir = "src/stable_baselines/temp/models/trained_mz_chuffed.zip"
 logdir = "src/stable_baselines/temp/logs"
 
 if not os.path.exists(models_dir):
@@ -68,7 +68,7 @@ class GiniEnv(gym.Env):
 
         simple_agents = Model("src/stable_baselines/temp/table_assignment_generic.mzn")
         simple_agents.add_file("src/stable_baselines/temp/"+str(self.index%3)+"_"+self.start,parse_data=True)
-        gecode = Solver.lookup("gecode")
+        gecode = Solver.lookup("chuffed")
         #chuffed vergleich
         #agenten nach training permutieren --> experiment
         instance = Instance(gecode, simple_agents)
@@ -120,7 +120,7 @@ class GiniEnv(gym.Env):
         model = PPO.load(file_dir, env=env)
 
         obs = env.reset()
-        writer = SummaryWriter("src/stable_baselines/temp/logs/greedy_trained")
+        writer = SummaryWriter("src/stable_baselines/temp/logs/greedy_trained_chuffed")
         for step in range(100):
                 action, _ = model.predict(obs, deterministic=True)
                 obs, reward, done, info = env.step(action)
@@ -138,13 +138,13 @@ class GiniEnv(gym.Env):
 
 def train(env):
     model = PPO('MultiInputPolicy', env, verbose=1, ent_coef=0.1, tensorboard_log=logdir, n_steps=52, batch_size=64, n_epochs=10)
-    model.learn(total_timesteps=1000, tb_log_name="greedy", callback=TensorboardCallback())
+    model.learn(total_timesteps=1000, tb_log_name="greedy_chuffed", callback=TensorboardCallback())
     model.save(models_dir)
 
 if __name__ == "__main__":
-    #env = DummyVecEnv([lambda: GiniEnv(grid_size=5, render_mode='console')]) 
+    env = DummyVecEnv([lambda: GiniEnv(grid_size=5, render_mode='console')]) 
 
-    #train(env)
+    train(env)
     env = GiniEnv(grid_size=5, render_mode='console')
     env.test()
 
