@@ -4,13 +4,15 @@
         "train_agent":"gini_env",
         "iterations":1,
         "model_name":"PPO",
-        "grid_size":5,
         "solver": "chuffed",
         "problem": "table_assignment",
         "path" : "src\\models\\table_assignment\\",
         "model": "table_assignment_generic.mzn",
         "data": [
-         "0_generic_preferences.dzn"
+        "0_generic_preferences.dzn",
+        "1_generic_preferences.dzn",
+        "2_generic_preferences.dzn",
+        "3_generic_preferences.dzn"
         ] 
       }
      
