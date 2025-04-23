@@ -3,14 +3,14 @@ from minizinc import Model, Solver, Instance
 import sys 
 import os
 
-#from utilitarian_runner import add_utilitarian_objective, optimize_utilitarian_objective 
+from utilitarian import utilitarian_objective, optimize_utilitarian_objective 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 from functools import partial
 
 from util.social_mapping_reader import read_social_mapping, AGENTS_ARRAY, UTILITY_ARRAY, NUM_AGENTS
 
 
-def add_proportionality_objective(social_mapper, instance : Instance):
+def add_proportionality_objective(instance : Instance, social_mapper):
     instance.add_string(f"int: m = card(index_set_1of2(possible_solutions));")
     instance.add_string(f"array[1..{social_mapper[NUM_AGENTS]}] of var float: max_values;")
     instance.add_string(f"array[1..{social_mapper[NUM_AGENTS]}] of var int: selected;")
@@ -20,6 +20,12 @@ def add_proportionality_objective(social_mapper, instance : Instance):
 
 def optimize_proportionality_objective(instance : Instance):
     instance.add_string(f"solve satisfy;")
+
+def prepare_proportionality_runner(social_mapping):
+    simple_runner = ProportionalityRunner(social_mapping)
+    simple_runner.add(add_proportionality_objective)
+    simple_runner.add(optimize_proportionality_objective)
+    return simple_runner
     
 '''
 A utilitarian runner maximizes the sum of utilities; 
@@ -38,23 +44,20 @@ class ProportionalityRunner(SimpleRunner):
 
 if __name__ == "__main__":
     import os
-    plain_tabular_model = Model(os.path.join(os.path.dirname(__file__), '../models/plain_tabular/plain_tabular.mzn'))
-    plain_tabular_model.add_file(os.path.join(os.path.dirname(__file__), '../models/plain_tabular/plain_tabular.dzn'), parse_data=True)
+    plain_tabular_model = Model(os.path.join(os.path.dirname(__file__), '../models/project_assignment/project_assignment_core.mzn'))
+    plain_tabular_model.add_file(os.path.join(os.path.dirname(__file__), '../models/project_assignment/data/project_assignment_1.dzn'), parse_data=True)
     gecode = Solver.lookup("gecode")
     
-    # now let's read the social mapping file 
+    #     now let's read the social mapping file 
     social_mapping_file = os.path.join(os.path.dirname(__file__), '../models/plain_tabular/social_mapping.json')
     social_mapping = read_social_mapping(social_mapping_file)
 
 
     simple_runner = ProportionalityRunner(social_mapping)
-    simple_runner.add(add_proportionality_objective, social_mapping)
-    simple_runner.add(optimize_proportionality_objective, social_mapping)
-    # simple_runner.add_presolve_handler(partial(add_utilitarian_objective, social_mapping))
-    # simple_runner.add_presolve_handler(optimize_utilitarian_objective)
+    simple_runner.add(add_proportionality_objective)
+    simple_runner.add(optimize_proportionality_objective)
+
     result = simple_runner.run(plain_tabular_model, gecode)
-    print(result)
-
-
+    print(result["selected"])
 
 

@@ -17,11 +17,12 @@ class SimpleRunner:
         self.social_mapping = social_mapping
         self.timeout = None
 
-    def run(self, model, solver = Solver.lookup("gecode")):
+    def run(self, model, weights, solver = Solver.lookup("gecode")):
         self.instance = Instance(solver, model)
         self.mzn_model = model 
         with self.instance.branch() as child:
             self.presolve_hook(child)
+            child["weights"] = weights
             # immediately before solving, log this model
             if self.debug:
                     log_and_debug_generated_files(child, "simple_runner_child", 0, self.debug_dir)

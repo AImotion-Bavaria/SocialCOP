@@ -6,7 +6,7 @@ import logging
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 
-from util.social_mapping_reader import read_social_mapping, AGENTS_ARRAY, UTILITY_ARRAY, NUM_AGENTS
+from util.social_mapping_reader import read_social_mapping, AGENTS_ARRAY, UTILITY_ARRAY, NUM_AGENTS, TIME_SPAN, MAIN_VARIABLES
 from util.mzn_debugger import create_debug_folder, log_and_debug_generated_files
 
 LEXIMIN_AGENTS_PLACEHOLDER = "Agents_Rawls_Mixin"
@@ -21,10 +21,17 @@ def add_leximin_mixin(instance : Instance, social_mapper):
     instance.add_string(f"\n{LEXIMIN_AGENTS_PLACEHOLDER} = {social_mapper[AGENTS_ARRAY]};\n")
     instance.add_string(f"\n{LEXIMIN_UTILITIES_PLACEHOLDER} = {social_mapper[UTILITY_ARRAY]};\n")
 
+def add_leximin_mixin_weights(instance : Instance, social_mapper):
+    instance.add_string(f"array[{(social_mapper[AGENTS_ARRAY])}] of int: weights;")
+    instance.add_string(f"var int: total_weight = sum(a in {social_mapper[AGENTS_ARRAY]}) (sum(d in {social_mapper[TIME_SPAN]}) ({social_mapper[MAIN_VARIABLES]}[a,d]) * weights[a]);")
+    #instance.add_string(f"solve maximize ({UTILITARIAN_OBJECTIVE} + 1000*total_weight);")
+
 class LeximinRunner(SimpleRunner):
-    def __init__(self, social_mapping) -> None:
+    def __init__(self, social_mapping, use_weights=False) -> None:
         super().__init__(social_mapping)
         self.add(add_leximin_mixin)
+        if use_weights:
+            self.add(add_leximin_mixin_weights)
         self.presolve_step = []
     
     def presolve_step_hook(self, instance):
@@ -33,7 +40,9 @@ class LeximinRunner(SimpleRunner):
 
     def solve(self, child: Instance):
         # have to ask the model, otherwise the parameter might not get passed to the child instance
-        num_agents = self.mzn_model[self.social_mapping[NUM_AGENTS]]
+        num_agents = len(child["weights"])
+
+        
 
         # gets initialized to be empty, updated with minimal values as we go
         maxmin_values = []
@@ -63,8 +72,8 @@ class LeximinRunner(SimpleRunner):
 
         return result
 
-def prepare_leximin_runner(social_mapping):
-    return LeximinRunner(social_mapping)
+def prepare_leximin_runner(social_mapping, use_weights=False):
+    return LeximinRunner(social_mapping, use_weights)
 
 if __name__ == "__main__":    
     logging.basicConfig(level=logging.INFO)

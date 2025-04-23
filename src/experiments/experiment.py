@@ -25,7 +25,7 @@ def parse_json(filename):
     with open(filename, 'r') as file:
         data = json.load(file)
         
-        for problem_instance in data['problems']:
+        for problem_instance in data['train']:
             model = problem_instance['model']
             problem = problem_instance["problem"]
             path = problem_instance["path"]

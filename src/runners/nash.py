@@ -12,8 +12,13 @@ def nash_objective(instance : Instance, social_mapper):
     instance.add_string(f"var int: {NASH_OBJECTIVE};")
     instance.add_string(f"constraint {NASH_OBJECTIVE} = product({social_mapper[UTILITY_ARRAY]});")
 
-def optimize_nash_objective(instance : Instance, social_mapper = None):
+def optimize_nash_objective(instance : Instance, social_mapper = None, use_weights = False):
     instance.add_string(f"solve maximize {NASH_OBJECTIVE};")
+
+def optimize_nash_objective(instance : Instance, social_mapper = None):
+    instance.add_string(f"var int: total_weight = sum(a in {social_mapper[AGENTS_ARRAY]}) (sum(d in 1..m) ({social_mapper[UTILITY_ARRAY]}[a,d]) * weights[a]);")
+    instance.add_string(f"solve maximize ({NASH_OBJECTIVE} + 1000*total_weight);")
+    
 
 def get_better_nash(instance : Instance, res : Result, social_mapper = None):
     # enforce that the next solution needs to be better than the current one

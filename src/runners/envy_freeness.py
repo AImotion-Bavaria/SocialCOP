@@ -8,7 +8,7 @@ from string import Template
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 
-from util.social_mapping_reader import read_social_mapping, get_substitution_dictionary, AGENTS_ARRAY, SHARE_UTIL_AGENT, SHARE_FUNCTION
+from util.social_mapping_reader import read_social_mapping, get_substitution_dictionary, AGENTS_ARRAY, SHARE_UTIL_AGENT, SHARE_FUNCTION, TIME_SPAN
 from util.mzn_debugger import create_debug_folder, log_and_debug_generated_files
 
 ENVY_PAIRS = "envy_pairs"
@@ -36,19 +36,30 @@ def envy_freeness_mixin(instance : Instance, social_mapper):
 def optimize_envy(instance : Instance, social_mapper = None):
     instance.add_string(f"\nsolve minimize {ENVY_PAIRS};\n")
 
+def optimize_envy_weights(instance : Instance, social_mapper = None):
+    instance.add_string(f"array[{(social_mapper[AGENTS_ARRAY])}] of int: weights;")
+    instance.add_string(f"var int: total_weight = sum(a in {social_mapper[AGENTS_ARRAY]}) (sum(d in {social_mapper[TIME_SPAN]}) ({social_mapper[SHARE_UTIL_AGENT]}(a, get_assigned_for(a)) * weights[a]));")
+    instance.add_string(f"solve minimize ({ENVY_PAIRS} + (-1000*total_weight));")
+    
+
 def enforce_envy_freeness(instance : Instance, social_mapper = None):
     instance.add_string(f"\nconstraint envy_free();\n")
 
-def prepare_envy_min_runner(social_mapping):
+def prepare_envy_min_runner(social_mapping, use_weights=False):
     simple_runner = SimpleRunner(social_mapping)
     simple_runner.model += [envy_freeness_mixin]
-    simple_runner.model +=  [optimize_envy]
+    if use_weights:
+        simple_runner.model += [optimize_envy_weights]
+    else:
+        simple_runner.model +=  [optimize_envy]
     return simple_runner
 
-def prepare_envy_free_runner(social_mapping):
+def prepare_envy_free_runner(social_mapping, use_weights=False):
     simple_runner = SimpleRunner(social_mapping)
     simple_runner.add(envy_freeness_mixin)
     simple_runner.add(enforce_envy_freeness)
+    if use_weights:
+        simple_runner.add(optimize_envy_weights)
     return simple_runner
 
 if __name__ == "__main__":    
