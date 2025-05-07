@@ -117,6 +117,13 @@ constraint forall(a in Agents) (
   sum(d in Days) (absent(assigned[a, d])) <= max_wfh_days
 );
 
+array[Agents] of var 0..1: got_table;
+
+constraint forall(a in Agents) (
+  got_table[a] = sum(d in Days)(bool2int(occurs(assigned[a, d])))
+);
+
+
 % added arbitrary bounds due to compilation error in MiniZinc
 array[Agents] of var -1000 .. 1000: utilities;
 constraint utilities = [share_utility(a, get_assigned_for(a)) + global_utility(a) | a in Agents];

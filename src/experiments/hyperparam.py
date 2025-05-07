@@ -15,9 +15,10 @@ def ppo_hyper_params(trial: optuna.Trial) -> dict:
         Returns:
         dict: Dictionary of sampled hyperparameters.
         """
-        batch_size = 64
-        possible_n_steps = [i for i in range(5, 2049) if i % batch_size == 0]
-        n_steps = trial.suggest_categorical("n_steps", possible_n_steps)
+        batch_size = 2
+        n_steps=2
+        #possible_n_steps = [i for i in range(5, 2049) if i % batch_size == 0]
+        #n_steps = trial.suggest_categorical("n_steps", possible_n_steps)
         
         return {
             "learning_rate": trial.suggest_float("learning_rate", 1e-5, 1e-2),

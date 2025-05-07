@@ -17,13 +17,15 @@ def optimize_rawls_objective(instance : Instance, social_mapper):
 def optimize_rawls_objective_weights(instance: Instance, social_mapper):
     # Declare the weights array
     instance.add_string(f"array[{(social_mapper[AGENTS_ARRAY])}] of int: weights;")
+    #array of float ausprobieren
     
     # Assign the weights array values
       # Pass the weights from Python to MiniZinc
     
     # Define the total_weight variable
     instance.add_string(f"var int: total_weight = sum(a in {social_mapper[AGENTS_ARRAY]}) (sum(d in {social_mapper[TIME_SPAN]}) ({social_mapper[MAIN_VARIABLES]}[a,d]) * weights[a]);")
-    
+    #var float: total_weight
+
     # Solve the objective
     instance.add_string(f"solve maximize ({RAWLS_OBJECTIVE} + 1000*total_weight);")
     

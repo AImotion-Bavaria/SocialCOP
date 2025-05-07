@@ -16,6 +16,8 @@ SHARE_UTIL_AGENT_MIXIN = "SHARE_UTIL_AGENT"
 SHARE_FUNCTION_MIXIN = "SHARE_FUNCTION"
 UTILITY_ARRAY_MIXIN = "UTILITY_ARRAY"
 
+ASSIGNED = "assigned" # a MiniZinc function that extracts something that represents the "assigned" of an agent
+
 
 def read_social_mapping(filename:str) -> dict:
     with open(filename) as file:
@@ -29,6 +31,7 @@ def get_substitution_dictionary(social_mapper : dict):
                 SHARE_UTIL_AGENT_MIXIN : social_mapper.get(SHARE_UTIL_AGENT, ""),
                 UTILITY_ARRAY_MIXIN : social_mapper.get(UTILITY_ARRAY, ""),
                 TIME_SPAN : social_mapper.get(TIME_SPAN, 0),
+                ASSIGNED : social_mapper.get(ASSIGNED, 0),
                 MAIN_VARIABLES: social_mapper.get(MAIN_VARIABLES, [])}
     return sub_dict
     

@@ -1,6 +1,6 @@
 import numpy as np
 from json_reader import get_substitution_dictionary, read_json_file
-from trained import train, test, GiniEnv
+from trained import train, test, TrainingEnv
 from det import DetEnv
 from stable_baselines3.common.vec_env import DummyVecEnv
 
@@ -44,7 +44,7 @@ def training():
     for j in range(5):
         # Training loop
         for method in sub_dict["train"]:
-            env = DummyVecEnv([lambda: GiniEnv(grid_size=5, render_mode='console', start=[1, 2, 3, 4, 5], method=method["train_agent"])])
+            env = DummyVecEnv([lambda: TrainingEnv(grid_size=5, render_mode='console', start=steps[j], method=method["train_agent"])])
             models_dir = f"src/stable_baselines/agents/models/test_trained_{method['train_agent']}"
             logdir = "src/stable_baselines/logs/training_"
             train(method["train_agent"], log_dir=logdir, models_dir=models_dir, timesteps=method["iterations"])

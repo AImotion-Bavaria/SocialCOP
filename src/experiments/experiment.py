@@ -8,7 +8,8 @@ class Experiment:
     problem: str
     path: str
     model_inst : tuple
-    iteration: int
+    iterations: int
+    num_agents: int
 
     def get_identifier(self):
         ident = f"{self.problem}_{self.solver}_{self.configuration}_{ '_'.join(self.model_inst[1])}" 
@@ -31,11 +32,13 @@ def parse_json(filename):
             problem = problem_instance["problem"]
             path = problem_instance["path"]
             data_files = problem_instance['data']
-            iteration = problem_instance['iteration']
+            iterations = problem_instance['iterations']
+            num_agents = problem_instance['num_agents']
+           
             
             for solver in data['solvers']:
                 for configuration in data['configurations']:
-                    experiment = Experiment(solver, configuration, problem, path, (model, data_files), iteration)
+                    experiment = Experiment(solver, configuration, problem, path, (model, data_files), iterations, num_agents)
                     experiments.append(experiment)
                         
     
