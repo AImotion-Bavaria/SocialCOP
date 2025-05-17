@@ -1,4 +1,4 @@
-Tables = {Table1};
+Tables = {Table1, Table2};
 wanted_days = [{Mon}, {}, {}, {}, {}];
 wanted_number_days = [{5}, {0}, {0}, {0}, {0}];
 wanted_breaks = [true, true, false, false, true];

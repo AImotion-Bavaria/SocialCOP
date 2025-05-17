@@ -12,8 +12,6 @@ import optuna
 from optuna.pruners import MedianPruner
 from optuna.samplers import TPESampler
 from hyperparam import ppo_hyper_params
-
-
 from fairness_models import (
     rawls,
     leximin,
@@ -54,9 +52,9 @@ result_dir = os.path.join('src/experiments/results')
 FORCE_OVERRIDE = True  # Use cached versions if False
 
 
-models_dir = "src/experiments/trained_models/det_mz"
-file_dir = "src/experiments/trained_models/det_mz.zip"
-logdir = "src/experiments/trained_models/logs"
+models_dir = "src/experiments/trained_models/new/trained_mz"
+file_dir = "src/experiments/trained_models/new/trained_mz.zip"
+logdir = "src/experiments/trained_models/new/logs"
 
 if not os.path.exists(models_dir):
     os.makedirs(models_dir)
@@ -74,7 +72,70 @@ configurations_map = {
       "envy_min": envy_min #check
 }
 
+def objective(trial: optuna.Trial, experiment: Experiment) -> float:
+    #mit weniger zeitschritten --> dann 
+    """
+    Objective function for Optuna hyperparameter optimization.
 
+    Parameters:
+    trial (optuna.Trial): Optuna trial object.
+    method (str): Method to use for training.
+
+    Returns:
+    float: Mean reward of the best trial.
+    """
+    N_TIMESTEPS = experiment.iterations# int(2e4)
+    N_EVALUATIONS = 10
+    EVAL_FREQ = max(1, int(N_TIMESTEPS / N_EVALUATIONS)) 
+    N_EVAL_EPISODES = 10
+
+    if not os.path.exists(models_dir):
+        os.makedirs(models_dir)
+
+    DEFAULT_HYPERPARAMS = {
+        "policy": "MultiInputPolicy",
+    }
+
+
+    #env = DummyVecEnv([lambda: GiniEnv(render_mode='console', experiment=experiment, experiment_runner=experiment_runner)])
+    env = GiniEnv(render_mode='console', experiment=experiment, experiment_runner=experiment_runner)
+
+    kwargs = DEFAULT_HYPERPARAMS.copy()
+    kwargs.update(ppo_hyper_params(trial))
+    kwargs = {key: value for key, value in kwargs.items() if key != "policy"}
+
+    model = PPO("MultiInputPolicy", env, verbose=0, **kwargs, n_epochs=5) # SAC / DQN=discrete
+
+    #eval_envs = DummyVecEnv([lambda: GiniEnv(render_mode='console', experiment=experiment, experiment_runner=experiment_runner)])
+    eval_envs = GiniEnv(render_mode='console', experiment=experiment, experiment_runner=experiment_runner)
+
+    eval_callback = EvalCallback(
+        eval_envs,
+        best_model_save_path=models_dir,
+        log_path=logdir,
+        eval_freq=EVAL_FREQ,
+        n_eval_episodes=N_EVAL_EPISODES,
+        deterministic=True,
+        verbose=1,
+    )
+
+    try:
+        nan_encountered = False
+        model.learn(N_TIMESTEPS, callback=eval_callback)
+    except AssertionError as e:
+        print(e)
+        nan_encountered = True
+    finally:
+        model.env.close()
+        eval_envs.close()
+
+    if nan_encountered:
+        return float("nan")
+
+    if trial.should_prune():
+        raise optuna.exceptions.TrialPruned()
+
+    return eval_callback.last_mean_reward
 
 
 def insert_into_results(database_name, db_result):
@@ -91,11 +152,12 @@ def insert_into_results(database_name, db_result):
         
         conn.commit() 
 
-class GiniEnv():
+class GiniEnv(gym.Env):
     metadata = {'render.modes': ['console']}
 
 
     def __init__(self, experiment, experiment_runner, render_mode=None,  ):
+        super(GiniEnv, self).__init__()
         self.experiment = experiment
         self.experiment_runner = experiment_runner
 
@@ -123,10 +185,8 @@ class GiniEnv():
 
     def step(self, action):
         #action=(action*100.0).astype(int)
-        if action is None:
-            self.action=np.zeros(self.experiment.num_agents)
-        else:
-            self.action=((action+1)*100).astype(int)
+        self.action=((action+1)*100).astype(int)
+        #solver: highs oder cbc
 
         simple_agents = Model(self.experiment.path + self.experiment.model_inst[0])
     
@@ -157,7 +217,6 @@ class GiniEnv():
         result : Result = configurations_map[self.experiment.configuration](model, social_mapping, solver, weights=weights)
         end_time = datetime.datetime.now()
         elapsed_time = end_time - start_time
-        
 
        
         if result and result.status != Status.UNKNOWN:
@@ -191,18 +250,21 @@ class GiniEnv():
         
 
        # for agent in range(self.experiment.num_agents):
-        #    self.observation["received"][agent]=sum(1 for x in result[social_mapping[MAIN_VARIABLES]][agent] if x != "NoTable")   
-        self.observation["received"] = result[social_mapping[ASSIGNED]] 
-        #self.observation["required"] = result[social_mapping[REQUIRED]]
+        #    self.observation["received"][agent]=sum(1 for x in result[social_mapping[MAIN_VARIABLES]][agent] if x != "NoTable")    
+        self.observation["received"] = result[social_mapping[ASSIGNED]]
         self.gini_index = calculate_gini(self.observation["valuation"])
-        self.reward = -100*self.gini_index
+        self.reward = 0
+        for i in range(self.experiment.num_agents):
+            if self.observation["required"][i] > 0:
+                self.reward= self.reward + 100*(self.observation["received"][i]/self.observation["required"][i])
+        self.reward = self.reward -100*self.gini_index
         
         
         #self.gini_index = calculate_gini(self.observation["valuation"])
         
        
         self.steps += 1
-        terminated = self.steps >=52
+        terminated = self.steps >=9
         truncated=False
         self.info={}
         self.info["received"] = self.observation["received"]
@@ -210,8 +272,8 @@ class GiniEnv():
         self.info["gini"] = self.gini_index
         self.info["sum_rec"] = sum(self.observation["received"])
         self.index += 1
-        print("action: " + str(action) + "valuation" + str(self.observation["valuation"]) +" reward :"+str(self.reward)+"\n\n")
-        return self.reward, self.observation, terminated, truncated, self.info
+        print("action: " + str(action) + "received" + str(self.observation["received"]) + "valuation" + str(self.observation["valuation"]) +" reward :"+str(self.reward)+"\n\n")
+        return self.observation, self.reward, terminated, truncated, self.info
     
     
 
@@ -224,52 +286,25 @@ class GiniEnv():
         
     
     
-    def test(self,iterations=10,  method="worst_received"):
-        env = GiniEnv(render_mode='console', experiment=self.experiment, experiment_runner=self.experiment_runner)
-        #model = PPO.load(file_dir, env=env)
-        unique_logdir = os.path.join(logdir, f"{method}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}")
+def test(render_mode, experiment, experiment_runner):
+        env = DummyVecEnv([lambda: GiniEnv(render_mode='console', experiment=experiment, experiment_runner=experiment_runner)]) 
+        final_model_path = os.path.join(models_dir, f"{experiment.get_identifier()}_best_model.zip")
+        model = PPO.load(final_model_path, env=env)
+        unique_logdir = os.path.join(logdir, f"{experiment.solver}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}")
         obs = env.reset()
-        writer = SummaryWriter(unique_logdir, filename_suffix=method)
+        writer = SummaryWriter(unique_logdir)
         for step in range(50):
-                action = getattr(self, method)()
-                reward, observation, terminated, truncated, info = env.step(action)
-                print(f' reward:{reward} Predicted action: {action} received: {info["received"]}, valuation: {info["valuation"]} ') 
+                action, _ = model.predict(obs, deterministic=True)
+                obs, reward, done, info = env.step(action)
+                print(f' reward:{reward} Predicted action: {action} received: {info[-1]["received"]}, valuation: {info[-1]["valuation"]} ') 
                 writer.add_scalar("Test/Reward", reward, step)
-                writer.add_scalar("Test/Gini_Index", calculate_gini(info["valuation"]), step)
-                writer.add_scalar("Test/Sum_rec", info["sum_rec"], step)
+                writer.add_scalar("Test/Gini_Index", calculate_gini(info[-1]["valuation"]), step)
+                writer.add_scalar("Test/Sum_rec", info[-1]["sum_rec"], step)
                 env.render()
-                if terminated or truncated:  
-                    print("reward", reward, "last call of episode", info[-1]["terminal_observation"], "Gini Index: ", calculate_gini(info["valuation"]))  # always use last element
+                if done.any():  
+                    print("reward", reward, "last call of episode", info[-1]["terminal_observation"], "Gini Index: ", calculate_gini(info[-1]["valuation"]))  # always use last element
                     print("Episode finished.")
                     break
-
-    def worst_received(self):
-        return_array= np.zeros(self.experiment.num_agents)
-        return_array[np.argmin(self.observation["received"], axis=None, out=None)]=1
-        return return_array
-    
-    def none(self):
-        return_array= np.zeros(self.experiment.num_agents)
-        return return_array
-    
-    def round_robin(self):
-        self.index += 1
-        return_array= np.zeros(self.experiment.num_agents)
-        return_array[(self.index - 1) % self.experiment.num_agents]=1
-        return return_array
-    
-    def greedy(self):
-        return_array = np.zeros(self.experiment.num_agents, dtype=int)
-        return_array[np.argmax(self.observation["required"], axis=None, out=None)]=1
-        return return_array
-    
-    def bedarf_received(self):
-        received_safe = np.where(self.observation["received"] == 0, 1, self.observation["received"])
-        value = max(self.observation["required"] / received_safe)
-        return_array= np.zeros(self.experiment.num_agents)
-        return_array[np.argmax(self.observation["required"] == value)]=1
-        return return_array
-    
 
 #def train(env):
  #   model = PPO('MultiInputPolicy', env, verbose=1, ent_coef=0.1, tensorboard_log=logdir, n_steps=52, batch_size=52, n_epochs=10)
@@ -302,11 +337,50 @@ class ExperimentRunner:
             print("Already exists")
             return db_result
         for experiment in experiments:
-            self.test(iterations=experiment.iterations, method="worst_received")
            
-            
+            N_TRIALS = experiment.iterations
+            N_JOBS = 1
+            N_STARTUP_TRIALS = 1
+            TIMEOUT = int(60 * 15)
 
+            pruner = MedianPruner(n_startup_trials=N_STARTUP_TRIALS, n_warmup_steps=2)
+            sampler = TPESampler(n_startup_trials=N_STARTUP_TRIALS)
+            study = optuna.create_study(sampler=sampler, storage="sqlite:///db.sqlite3", pruner=pruner, direction="maximize")
+            try:
+                study.optimize(lambda trial: objective(trial, experiment), n_trials=N_TRIALS, n_jobs=N_JOBS, timeout=TIMEOUT)
+               #study.optimize(lambda trial: objective(trial, experiment), n_jobs=N_JOBS, timeout=TIMEOUT)
+            except KeyboardInterrupt:
+                pass
+
+            print("Number of finished trials: ", len(study.trials))
+
+            print("Best trial:")
+            trial = study.best_trial
+
+            print(f"  Value: {trial.value}")
+
+            print("  Params: ")
+            for key, value in trial.params.items():
+                print(f"    {key}: {value}")
             
+            # Rebuild environment
+            env = GiniEnv(render_mode='console', experiment=experiment, experiment_runner=self)
+
+            # Get best hyperparameters and remove 'policy' if present
+            best_params = trial.params.copy()
+            policy = "MultiInputPolicy"
+            best_params = {k: v for k, v in best_params.items() if k != "policy"}
+
+            # Train final model
+            model = PPO(policy, env, verbose=1, **best_params)
+            model.learn(total_timesteps=50)
+
+            # Save the final model
+            final_model_path = os.path.join(models_dir, f"{experiment.get_identifier()}_best_model.zip")
+            model.save(final_model_path)
+
+            print(f"Final trained model saved at: {os.path.abspath(final_model_path)}")
+
 
 
            #env = GiniEnv(grid_size=5, render_mode='console', start="generic_preferences.dzn", experiment=experiment)
@@ -360,7 +434,7 @@ if __name__ == "__main__":
     if not os.path.isdir(result_dir):
         os.makedirs(result_dir)
 
-    database_name = os.path.join(result_dir, 'det_test.db')
+    database_name = os.path.join(result_dir, 'test.db')
     create_database(database_name)
     print(f"Database '{database_name}' created successfully.")
 
@@ -372,12 +446,7 @@ if __name__ == "__main__":
     
    # train(env)
     env = GiniEnv(render_mode='console', experiment=experiments[0], experiment_runner=experiment_runner)
-    env.test(method="worst_received")
-    env.test(method="greedy")
-    env.test(method="bedarf_received")
-    env.test(method="round_robin")
-    env.test(method="none")
-  
+    #test(render_mode='console', experiment=experiments[0], experiment_runner=experiment_runner)
     experiment_runner.run_all_experiments(experiments)
 
 

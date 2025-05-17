@@ -6,5 +6,6 @@
     "share_function" : "get_assigned_for",
     "share_utility" : "share_utility",
     "time_span": "Days",
-    "assigned": "got_table"
+    "assigned": "got_table",
+    "required": "number_days"
 }

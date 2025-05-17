@@ -31,7 +31,7 @@ sys.path.append(src)
 # Import custom modules
 from experiment import Experiment, parse_json
 from runners.envy_freeness import ENVY_PAIRS
-from util.social_mapping_reader import read_social_mapping, UTILITY_ARRAY, ASSIGNED
+from util.social_mapping_reader import read_social_mapping, UTILITY_ARRAY, ASSIGNED, REQUIRED
 
 # Import external libraries
 import gymnasium as gym
@@ -104,7 +104,7 @@ def objective(trial: optuna.Trial, experiment: Experiment) -> float:
     kwargs.update(ppo_hyper_params(trial))
     kwargs = {key: value for key, value in kwargs.items() if key != "policy"}
 
-    model = PPO("MultiInputPolicy", env, verbose=0, **kwargs, n_epochs=1) # SAC / DQN=discrete
+    model = PPO("MultiInputPolicy", env, verbose=0, **kwargs, n_epochs=5) # SAC / DQN=discrete
 
     #eval_envs = DummyVecEnv([lambda: GiniEnv(render_mode='console', experiment=experiment, experiment_runner=experiment_runner)])
     eval_envs = GiniEnv(render_mode='console', experiment=experiment, experiment_runner=experiment_runner)
@@ -221,6 +221,7 @@ class GiniEnv(gym.Env):
        
         if result and result.status != Status.UNKNOWN:
             utils = result[social_mapping[UTILITY_ARRAY]]
+            self.observation["required"] = result[social_mapping[REQUIRED]]
             db_result = {"model": self.experiment.problem, "data_files" : "".join(self.experiment.model_inst[1]), 
                         "utilities" : utils, "max_utility" : max(utils), "min_utility" : min(utils), "sum_utility" : sum(utils),
                         "solving_runtime" : elapsed_time.total_seconds() , 
@@ -259,7 +260,7 @@ class GiniEnv(gym.Env):
         
        
         self.steps += 1
-        terminated = self.steps >=10
+        terminated = self.steps >= 52
         truncated=False
         self.info={}
         self.info["received"] = self.observation["received"]
@@ -281,13 +282,14 @@ class GiniEnv(gym.Env):
         
     
     
-    def test(self,iterations=10, filedir=file_dir, start="generic_preferences.dzn", model_name=PPO):
-        env = DummyVecEnv([lambda: GiniEnv(render_mode='console', start=start, experiment=self.experiment, experiment_runner=self.experiment_runner)]) 
-        model = PPO.load(file_dir, env=env)
-
+def test(render_mode, experiment, experiment_runner):
+        env = DummyVecEnv([lambda: GiniEnv(render_mode='console', experiment=experiment, experiment_runner=experiment_runner)]) 
+        final_model_path = os.path.join(models_dir, f"{experiment.get_identifier()}_best_model.zip")
+        model = PPO.load(final_model_path, env=env)
+        unique_logdir = os.path.join(logdir, f"{experiment.solver}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}")
         obs = env.reset()
-        writer = SummaryWriter(logdir)
-        for step in range(iterations):
+        writer = SummaryWriter(unique_logdir)
+        for step in range(50):
                 action, _ = model.predict(obs, deterministic=True)
                 obs, reward, done, info = env.step(action)
                 print(f' reward:{reward} Predicted action: {action} received: {info[-1]["received"]}, valuation: {info[-1]["valuation"]} ') 
@@ -332,7 +334,7 @@ class ExperimentRunner:
             return db_result
         for experiment in experiments:
            
-            N_TRIALS = 1# experiment.iterations
+            N_TRIALS = experiment.iterations
             N_JOBS = 1
             N_STARTUP_TRIALS = 1
             TIMEOUT = int(60 * 15)
@@ -341,8 +343,8 @@ class ExperimentRunner:
             sampler = TPESampler(n_startup_trials=N_STARTUP_TRIALS)
             study = optuna.create_study(sampler=sampler, storage="sqlite:///db.sqlite3", pruner=pruner, direction="maximize")
             try:
-               # study.optimize(lambda trial: objective(trial, experiment), n_trials=N_TRIALS, n_jobs=N_JOBS, timeout=TIMEOUT)
-               study.optimize(lambda trial: objective(trial, experiment), n_jobs=N_JOBS, timeout=TIMEOUT)
+                study.optimize(lambda trial: objective(trial, experiment), n_trials=N_TRIALS, n_jobs=N_JOBS, timeout=TIMEOUT)
+               #study.optimize(lambda trial: objective(trial, experiment), n_jobs=N_JOBS, timeout=TIMEOUT)
             except KeyboardInterrupt:
                 pass
 
@@ -439,9 +441,9 @@ if __name__ == "__main__":
     #env = DummyVecEnv([lambda: GiniEnv(grid_size=5, render_mode='console', experiment=experiments[0], experiment_runner=ExperimentRunner(database_name)),]) 
     
    # train(env)
-    #env = GiniEnv(grid_size=5, render_mode='console', experiment=experiments[0], experiment_runner=experiment_runner)
-    #env.test()
-    experiment_runner.run_all_experiments(experiments)
+    #env = GiniEnv(render_mode='console', experiment=experiments[0], experiment_runner=experiment_runner)
+    test(render_mode='console', experiment=experiments[0], experiment_runner=experiment_runner)
+    #experiment_runner.run_all_experiments(experiments)
 
 
 

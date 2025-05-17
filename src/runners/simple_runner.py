@@ -13,7 +13,7 @@ class SimpleRunner:
         self.model = []   # a list of functions applied before solving
         self.on_result = [] # a list of functions applied after seeing a result
         self.debug = False
-        self.debug_dir = None
+        self.debug_dir = "/home/ruttmann/projects/SocialCOP/src/experiments/debug"
         self.social_mapping = social_mapping
         self.timeout = None
 

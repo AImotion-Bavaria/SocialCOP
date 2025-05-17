@@ -2,7 +2,7 @@
   "train":[
      {
         "train_agent":"gini_env",
-        "iterations":1,
+        "iterations":10,
         "num_agents": 5,
         "model_name":"PPO",
         "solver": "chuffed",
@@ -21,7 +21,7 @@
   "test":[
      {
         "test_agent":"gini_env",
-        "iterations":1,
+        "iterations":50,
         "model_name":"PPO",
          "solver": "chuffed"
      }
