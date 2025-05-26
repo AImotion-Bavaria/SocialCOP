@@ -12,8 +12,8 @@ class SimpleRunner:
     def __init__(self, social_mapping) -> None:
         self.model = []   # a list of functions applied before solving
         self.on_result = [] # a list of functions applied after seeing a result
-        self.debug = False
-        self.debug_dir = "/home/ruttmann/projects/SocialCOP/src/experiments/debug"
+        self.debug = True
+        self.debug_dir = "/home/ruttmann/projects/SocialCOP/src/experiments/debug/normalized"
         self.social_mapping = social_mapping
         self.timeout = None
 

@@ -6,12 +6,12 @@ import pickle
 import datetime
 from os.path import dirname
 from stable_baselines3.common.callbacks import EvalCallback
-from stable_baselines3 import PPO
+from stable_baselines3 import A2C, PPO
 from stable_baselines3.common.vec_env import DummyVecEnv
 import optuna
 from optuna.pruners import MedianPruner
 from optuna.samplers import TPESampler
-from hyperparam import ppo_hyper_params
+from hyperparam import ppo_hyper_params, a2c_hyper_params
 from fairness_models import (
     rawls,
     leximin,
@@ -52,9 +52,9 @@ result_dir = os.path.join('src/experiments/results')
 FORCE_OVERRIDE = True  # Use cached versions if False
 
 
-models_dir = "src/experiments/trained_models/new/trained_mz"
-file_dir = "src/experiments/trained_models/new/trained_mz.zip"
-logdir = "src/experiments/trained_models/new/logs"
+models_dir = "src/experiments/trained_models/new_A2C/trained_mz"
+file_dir = "src/experiments/trained_models/new_A2C/trained_mz.zip"
+logdir = "src/experiments/trained_models/new_A2C/logs"
 
 if not os.path.exists(models_dir):
     os.makedirs(models_dir)
@@ -101,10 +101,10 @@ def objective(trial: optuna.Trial, experiment: Experiment) -> float:
     env = GiniEnv(render_mode='console', experiment=experiment, experiment_runner=experiment_runner)
 
     kwargs = DEFAULT_HYPERPARAMS.copy()
-    kwargs.update(ppo_hyper_params(trial))
+    kwargs.update(a2c_hyper_params(trial))
     kwargs = {key: value for key, value in kwargs.items() if key != "policy"}
 
-    model = PPO("MultiInputPolicy", env, verbose=0, **kwargs, n_epochs=5) # SAC / DQN=discrete
+    model = A2C("MultiInputPolicy", env, verbose=0, **kwargs) # SAC / DQN=discrete
 
     #eval_envs = DummyVecEnv([lambda: GiniEnv(render_mode='console', experiment=experiment, experiment_runner=experiment_runner)])
     eval_envs = GiniEnv(render_mode='console', experiment=experiment, experiment_runner=experiment_runner)
@@ -345,7 +345,17 @@ class ExperimentRunner:
 
         pruner = MedianPruner(n_startup_trials=N_STARTUP_TRIALS, n_warmup_steps=2)
         sampler = TPESampler(n_startup_trials=N_STARTUP_TRIALS)
-        study = optuna.create_study(study_name="experiment_runner_new",sampler=sampler, storage="sqlite:///db.sqlite3", pruner=pruner, direction="maximize",  load_if_exists=True)
+        db_path = "db.sqlite3"
+        study_name = f"{experiment.get_identifier()}_experiment_normalized_rawls_A2C"
+
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+
+# Delete the study
+        cursor.execute("DELETE FROM studies WHERE study_name = ?", (study_name,))
+        conn.commit()
+        conn.close()
+        study = optuna.create_study(study_name=f"{experiment.get_identifier()}_experiment_normalized_rawls_A2C",sampler=sampler, storage="sqlite:///db.sqlite3", pruner=pruner, direction="maximize")
         try:
             study.optimize(lambda trial: objective(trial, experiment), n_trials=N_TRIALS, n_jobs=N_JOBS, timeout=TIMEOUT)
                #study.optimize(lambda trial: objective(trial, experiment), n_jobs=N_JOBS, timeout=TIMEOUT)
@@ -376,7 +386,7 @@ class ExperimentRunner:
         model.learn(total_timesteps=50)
 
             # Save the final model
-        final_model_path = os.path.join(models_dir, f"{experiment.get_identifier()}_best_model.zip")
+        final_model_path = os.path.join(models_dir, f"{experiment.get_identifier()}_normalized_best_model.zip")
         model.save(final_model_path)
 
         print(f"Final trained model saved at: {os.path.abspath(final_model_path)}")

@@ -14,7 +14,7 @@ from envy_freeness import enforce_envy_freeness, envy_freeness_mixin, prepare_en
 from leximin_runner import LeximinRunner, prepare_leximin_runner
 from mzn_debugger import create_debug_folder
 from pareto_runner import ParetoUtilityTracker, pareto_only_nondom_mixin
-from rawls import prepare_rawls_runner
+from rawls_normalized import prepare_rawls_runner
 from simple_runner import SimpleRunner
 from social_mapping_reader import SHARE_FUNCTION
 from utilitarian import prepare_utilitarian_runner

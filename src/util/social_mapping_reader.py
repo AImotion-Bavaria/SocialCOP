@@ -15,6 +15,7 @@ AGENTS_ARRAY_MIXIN = "AGENTS_ARRAY"
 SHARE_UTIL_AGENT_MIXIN = "SHARE_UTIL_AGENT"
 SHARE_FUNCTION_MIXIN = "SHARE_FUNCTION"
 UTILITY_ARRAY_MIXIN = "UTILITY_ARRAY"
+REQUIRED = "required" # a MiniZinc function that extracts something that represents the "required" of an agent
 
 ASSIGNED = "assigned" # a MiniZinc function that extracts something that represents the "assigned" of an agent
 
@@ -32,6 +33,8 @@ def get_substitution_dictionary(social_mapper : dict):
                 UTILITY_ARRAY_MIXIN : social_mapper.get(UTILITY_ARRAY, ""),
                 TIME_SPAN : social_mapper.get(TIME_SPAN, 0),
                 ASSIGNED : social_mapper.get(ASSIGNED, 0),
-                MAIN_VARIABLES: social_mapper.get(MAIN_VARIABLES, [])}
+                REQUIRED : social_mapper.get(REQUIRED, ""),
+                MAIN_VARIABLES: social_mapper.get(MAIN_VARIABLES, [])},
+                
     return sub_dict
     

@@ -339,13 +339,14 @@ class ExperimentRunner:
        
            
         N_TRIALS = experiment.iterations
-        N_JOBS = 1
-        N_STARTUP_TRIALS = 1
+        N_JOBS = 2
+        N_STARTUP_TRIALS = 2
         TIMEOUT = int(60 * 15)
 
         pruner = MedianPruner(n_startup_trials=N_STARTUP_TRIALS, n_warmup_steps=2)
         sampler = TPESampler(n_startup_trials=N_STARTUP_TRIALS)
-        study = optuna.create_study(study_name="experiment_runner_new",sampler=sampler, storage="sqlite:///db.sqlite3", pruner=pruner, direction="maximize",  load_if_exists=True)
+        #db_path = "db.sqlite3"
+        study = optuna.create_study(study_name=f"test{experiment.get_identifier()}_experiment_normalized_rawls_test",sampler=sampler, storage="sqlite:///db.sqlite3", pruner=pruner, direction="maximize", load_if_exists=True)
         try:
             study.optimize(lambda trial: objective(trial, experiment), n_trials=N_TRIALS, n_jobs=N_JOBS, timeout=TIMEOUT)
                #study.optimize(lambda trial: objective(trial, experiment), n_jobs=N_JOBS, timeout=TIMEOUT)
@@ -373,10 +374,10 @@ class ExperimentRunner:
 
             # Train final model
         model = PPO(policy, env, verbose=1, **best_params)
-        model.learn(total_timesteps=50)
+        model.learn(total_timesteps=100)
 
             # Save the final model
-        final_model_path = os.path.join(models_dir, f"{experiment.get_identifier()}_best_model.zip")
+        final_model_path = os.path.join(models_dir, f"{experiment.get_identifier()}_normalized_best_model_test_2.zip")
         model.save(final_model_path)
 
         print(f"Final trained model saved at: {os.path.abspath(final_model_path)}")
@@ -445,10 +446,10 @@ if __name__ == "__main__":
     #env = DummyVecEnv([lambda: GiniEnv(grid_size=5, render_mode='console', experiment=experiments[0], experiment_runner=ExperimentRunner(database_name)),]) 
     
     #train(env)
-    env = GiniEnv(render_mode='console', experiment=experiments[0], experiment_runner=experiment_runner)
-    #for experiment in experiments:
-     #   print("Running experiment: ", experiment.get_identifier())
-      #  test(render_mode='console', experiment=experiments[0], experiment_runner=experiment_runner)
+    #env = GiniEnv(render_mode='console', experiment=experiments[0], experiment_runner=experiment_runner)
+   # for experiment in experiments:
+    #print("Running experiment: ", experiments[1].get_identifier())
+    #test(render_mode='console', experiment=experiments[1], experiment_runner=experiment_runner)
     experiment_runner.run_all_experiments(experiments)
 
 
