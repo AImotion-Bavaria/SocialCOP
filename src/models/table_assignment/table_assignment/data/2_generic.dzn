@@ -1,0 +1,7 @@
+Tables = {Table1, Table2};
+wanted_days = [{Mon}, {Tue}, {Wed}, {Thu}, {Fri}];
+wanted_number_days = [{4}, {1}, {4}, {1}, {1}];
+wanted_breaks = [false, false, false, false, false];
+desired_partners = [{}, {}, {}, {}, {}];
+n_agents = 5;
+max_wfh_days = 4;

@@ -1,0 +1,11 @@
+{
+    "Tables": ["Table1", "Table2"],
+    "wanted_days": [ {"set": ["Mon"]}, {"set": ["Mon"]}, {"set": ["Mon"]}, {"set": []}, {"set": []} ],
+    "wanted_number_days": [ {"set": [5]}, {"set": [5]}, {"set": [5]}, {"set": [0]}, {"set": [0]} ],
+    "wanted_breaks": [true, true, false, false, true],
+    "desired_partners": [ {"set": []}, {"set": []}, {"set": []}, {"set": []}, {"set": []} ],
+    "n_agents": 5,
+    "max_wfh_days": 5,
+    "utility_upper_bound": 15,
+    "utility_lower_bound": 0
+}

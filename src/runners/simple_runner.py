@@ -9,11 +9,12 @@ from util.social_mapping_reader import read_social_mapping
 from util.mzn_debugger import create_debug_folder, log_and_debug_generated_files
 
 class SimpleRunner:
-    def __init__(self, social_mapping) -> None:
+    def __init__(self, social_mapping, experiment=None) -> None:
         self.model = []   # a list of functions applied before solving
         self.on_result = [] # a list of functions applied after seeing a result
         self.debug = True
-        self.debug_dir = "/home/ruttmann/projects/SocialCOP/src/experiments/debug/normalized"
+        self.experiment = experiment
+        self.debug_dir = "/home/ruttmann/projects/SocialCOP/src/experiments/debug/04_07"
         self.social_mapping = social_mapping
         self.timeout = None
 
@@ -45,8 +46,12 @@ class SimpleRunner:
         self.model.append(presolve_handler)
 
     def presolve_hook(self, instance):
-        for handler in self.model:
-            handler(instance, self.social_mapping)
+        if self.experiment is not None:
+            for handler in self.model:
+                handler(instance, self.social_mapping, self.experiment)
+        else:
+            for handler in self.model:
+                handler(instance, self.social_mapping)
 
     def on_result_hook(self, instance, result):
         for handler in self.on_result:

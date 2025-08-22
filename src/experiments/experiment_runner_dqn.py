@@ -1,20 +1,19 @@
+import json
 import os
 import sys
 import sqlite3
 import logging
 import pickle
 import datetime
-import json
 from os.path import dirname
 from stable_baselines3.common.callbacks import EvalCallback
-from stable_baselines3 import PPO
+from stable_baselines3 import PPO, A2C, SAC, DQN
 from stable_baselines3.common.vec_env import DummyVecEnv
 import optuna
 from optuna.pruners import MedianPruner
 from optuna.samplers import TPESampler
-from hyperparam import ppo_hyper_params
-
-
+#from experiment_runner_det import GiniEnvDQN
+from hyperparam import ppo_hyper_params, a2c_hyper_params, sac_hyper_params, dqn_hyper_params
 from fairness_models import (
     none,
     rawls,
@@ -35,12 +34,12 @@ sys.path.append(src)
 # Import custom modules
 from experiment import Experiment, parse_json
 from runners.envy_freeness import ENVY_PAIRS
-from util.social_mapping_reader import read_social_mapping, UTILITY_ARRAY, ASSIGNED, REQUIRED, UTILITY_UPPER_BOUND, UTILITY_LOWER_BOUND
+from util.social_mapping_reader import UTILITY_LOWER_BOUND, UTILITY_UPPER_BOUND, read_social_mapping, UTILITY_ARRAY, ASSIGNED, REQUIRED
 
 # Import external libraries
 import gymnasium as gym
 from gymnasium import spaces
-from gymnasium.spaces import Dict, Box
+from gymnasium.spaces import Dict, Discrete, Box
 
 from torch.utils.tensorboard import SummaryWriter
 from logging_tensorboard import TensorboardCallback
@@ -50,15 +49,15 @@ from gini import calculate_gini
 
 # Define base and result directories
 base_dir = os.path.dirname(__file__)
-result_dir = os.path.join('src/experiments/results')
+result_dir = os.path.join('src/experiments/06_07/results')
 
 # Constants
 FORCE_OVERRIDE = True  # Use cached versions if False
 
 
-models_dir = "src/experiments/04_07/trained_models_none/trained_mz"
-file_dir = "src/experiments/04_07/trained_models_none/trained_mz.zip"
-logdir = "src/experiments/utilitarian/results"
+models_dir = "src/experiments/06_07/trained_models_none/trained_mz"
+file_dir = "src/experiments/06_07/trained_models_none/trained_mz.zip"
+logdir = "src/experiments/01_07/results"
 
 if not os.path.exists(models_dir):
     os.makedirs(models_dir)
@@ -67,7 +66,7 @@ if not os.path.exists(logdir):
     os.makedirs(logdir)
 
 configurations_map = {
-      "none": none,  
+      "none": none,
       "rawls" : rawls,  #check
       "leximin": leximin, #check
       "utilitarian" : utilitarian, #check
@@ -77,6 +76,90 @@ configurations_map = {
       "envy_min": envy_min #check
 }
 
+def objective(trial: optuna.Trial, experiment: Experiment) -> float:
+    #mit weniger zeitschritten --> dann 
+    """
+    Objective function for Optuna hyperparameter optimization.
+
+    Parameters:
+    trial (optuna.Trial): Optuna trial object.
+    method (str): Method to use for training.
+
+    Returns:
+    float: Mean reward of the best trial.
+    """
+    N_TIMESTEPS = experiment.iterations# int(2e4)
+    N_EVALUATIONS = 10
+    EVAL_FREQ = max(1, int(N_TIMESTEPS / N_EVALUATIONS)) 
+    N_EVAL_EPISODES = 10
+
+    if not os.path.exists(models_dir):
+        os.makedirs(models_dir)
+
+    DEFAULT_HYPERPARAMS = {
+        "policy": "MultiInputPolicy",
+    }
+
+
+    #env = DummyVecEnv([lambda: GiniEnvDQN(render_mode='console', experiment=experiment, experiment_runner=experiment_runner)])
+    #env = GiniEnvDQN(render_mode='console', experiment=experiment, experiment_runner=experiment_runner)
+
+    kwargs = DEFAULT_HYPERPARAMS.copy()
+    # Dynamically select the correct hyperparameter function based on the model name
+    model_hyper_params_func = {
+        "ppo": ppo_hyper_params,
+        "a2c": a2c_hyper_params,
+        "sac": sac_hyper_params,
+        "dqn": dqn_hyper_params
+    }.get(experiment.model_names.lower())
+    if model_hyper_params_func is not None:
+        kwargs.update(model_hyper_params_func(trial))
+    kwargs = {key: value for key, value in kwargs.items() if key != "policy"}
+
+    model_class = {
+        "ppo": PPO,
+        "a2c": A2C,
+        "sac": SAC,
+        "dqn": DQN
+    }.get(experiment.model_names.lower())
+    if model_class is None:
+        raise ValueError(f"Unknown model name: {experiment.model_names}")
+    model_kwargs = dict(verbose=0, **kwargs)
+   # if experiment.model_names.lower() in ["ppo", "a2c"]:
+    #    model_kwargs["n_epochs"] = 5
+    
+    eval_envs = GiniEnvDQN(render_mode='console', experiment=experiment, experiment_runner=experiment_runner)
+    model = model_class("MultiInputPolicy", eval_envs, **model_kwargs)
+    eval_callback = EvalCallback(
+        eval_envs,
+        best_model_save_path=models_dir+"/"+experiment.get_identifier_short(),
+        log_path=logdir,
+        eval_freq=EVAL_FREQ,
+        n_eval_episodes=N_EVAL_EPISODES,
+        deterministic=True,
+        verbose=1,
+    )
+
+    try:
+        nan_encountered = False
+        model.learn(N_TIMESTEPS, callback=eval_callback)
+    except AssertionError as e:
+        print(e)
+        nan_encountered = True
+    except Exception as e:
+        print("Exception during learning:", e)
+        return float("nan")
+    finally:
+        model.env.close()
+        eval_envs.close()
+
+    if nan_encountered:
+        return float("nan")
+
+    if trial.should_prune():
+        raise optuna.exceptions.TrialPruned()
+
+    return eval_callback.best_mean_reward
 
 
 def insert_into_results(database_name, db_result):
@@ -93,18 +176,20 @@ def insert_into_results(database_name, db_result):
         
         conn.commit() 
 
-class GiniEnv(gym.Env):
+class GiniEnvDQN(gym.Env):
 
-    #eine klasse für beide (detEnv erbt von GiniEnv)
+    #eine klasse für beide (detEnv erbt von GiniEnvDQN)
     metadata = {'render.modes': ['console']}
 
 
     def __init__(self, experiment, experiment_runner, render_mode=None,  ):
-        super(GiniEnv, self).__init__()
+        super(GiniEnvDQN, self).__init__()
         self.experiment = experiment
         self.experiment_runner = experiment_runner
 
-        self.action_space = Box(low=-1, high=1, shape=(self.experiment.num_agents,), dtype=np.float64) # evtl. continouus 
+        self.action_space = gym.spaces.Discrete((2**self.experiment.num_agents)-1)
+
+        #self.action_space = Discrete(low=0, high=100, shape=(self.experiment.num_agents,), dtype=np.int32) # evtl. continouus 
         #needs to be n_agents
         self.observation_space = Dict({
             "required": Box(low=0, high=1, shape=(self.experiment.num_agents,), dtype=np.float64),
@@ -143,10 +228,12 @@ class GiniEnv(gym.Env):
 
     def step(self, action):
         if action is None:
-            self.action = np.zeros(self.experiment.num_agents, dtype=int)
+            self.action = np.zeros(self.experiment.num_agents, dtype=np.float64)
         else:
-    # Convert to float array first, then scale and cast to int
-            self.action=((action)*100).astype(int)
+            self.action = bin(action)[2:].zfill(self.experiment.num_agents)  
+            self.action = [int(bit) for bit in self.action]
+            self.action = [bit * 100 for bit in self.action]
+
 
 
         #print(self.experiment.path + self.experiment.model_inst[0])
@@ -280,9 +367,9 @@ class GiniEnv(gym.Env):
     
     
     def test(self,iterations=10,  method="worst_received"):
-        env = GiniEnv(render_mode='console', experiment=self.experiment, experiment_runner=self.experiment_runner)
+        env = GiniEnvDQN(render_mode='console', experiment=self.experiment, experiment_runner=self.experiment_runner)
         #model = PPO.load(file_dir, env=env)
-        unique_logdir = os.path.join(logdir, f"{method}_{experiment.solver}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}")
+        unique_logdir = os.path.join(logdir, f"{method}_{self.experiment.solver}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}")
         obs = env.reset()
         writer = SummaryWriter(unique_logdir, filename_suffix=method)
         for step in range(50):
@@ -326,7 +413,43 @@ class GiniEnv(gym.Env):
         return_array= np.zeros(self.experiment.num_agents)
         return_array[np.argmax(self.observation["required"] == value)]=1
         return return_array
+        
     
+    
+def test(render_mode, experiment, experiment_runner):
+        env = DummyVecEnv([lambda: GiniEnvDQN(render_mode='console', experiment=experiment, experiment_runner=experiment_runner)]) 
+        final_model_path = os.path.join(models_dir, f"{experiment.get_identifier_short()}","best_model.zip")
+        #final_model_path = os.path.join("/home/ruttmann/projects/SocialCOP/src/experiments/26_06/trained_models/new/trained_mz/table_assignment_chuffed_rawls_P_P_O_best_model.zip")
+        #hier model richtig einfügen
+        #!!!!
+        model_class = {
+        "ppo": PPO,
+        "a2c": A2C,
+        "sac": SAC,
+        "dqn": DQN
+        }.get(experiment.model_names.lower())
+        if model_class is None:
+            raise ValueError(f"Unknown model name: {experiment.model_names}")
+   # if experiment.model_names.lower() in ["ppo", "a2c"]:
+    #    model_kwargs["n_epochs"] = 5
+        model = model_class.load(final_model_path, env=env)
+        #model = PPO.load(final_model_path, env=env)
+        unique_logdir = os.path.join(logdir, f"{experiment.solver}_{experiment.model_names}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}")
+        obs = env.reset()
+        writer = SummaryWriter(unique_logdir)
+        for step in range(50):
+                action, _ = model.predict(obs, deterministic=True)
+                obs, reward, done, info = env.step(action)
+                print(f' reward:{reward} Predicted action: {action} received: {info[-1]["received"]}, valuation: {info[-1]["valuation"]} ') 
+                writer.add_scalar("Test/Reward", reward, step)
+                writer.add_scalar("Test/Gini_Index", calculate_gini(info[-1]["valuation"]), step)
+                writer.add_scalar("Test/Gini_Index_Overall", calculate_gini(info[-1]["overall_valuation"]), step)
+                writer.add_scalar("Test/Sum_rec", info[-1]["sum_rec"], step)
+                env.render()
+                if done.any():  
+                    print("reward", reward, "last call of episode", info[-1]["terminal_observation"], "Gini Index: ", calculate_gini(info[-1]["valuation"]))  # always use last element
+                    print("Episode finished.")
+                    break
 
 #def train(env):
  #   model = PPO('MultiInputPolicy', env, verbose=1, ent_coef=0.1, tensorboard_log=logdir, n_steps=52, batch_size=52, n_epochs=10)
@@ -347,28 +470,103 @@ class ExperimentRunner:
             try :
                 self.run_experiment(experiment)
             except:
-                logging.info("An error occurred, continuing")
+                logging.info("An error occurred, continuing - "+ experiment.get_identifier())
     
 
-    def run_experiment(self, experiment : Experiment, method="worst_received"):
-        pickle_output = result_dir + "/"+ experiment.get_result_filename()
+    def run_experiment(self, experiment: Experiment):
+        pickle_output = result_dir + "/" + experiment.get_result_filename()
 
         if os.path.exists(pickle_output) and not FORCE_OVERRIDE:
             with open(pickle_output, 'rb') as handle:
                 db_result = pickle.load(handle)
             print("Already exists")
             return db_result
-        for experiment in experiments:
-            self.test(iterations=experiment.iterations, method=method)
-           
-            
 
-            
+        N_TRIALS = 20
+        N_JOBS = 10
+        N_STARTUP_TRIALS = 10
 
+        pruner = MedianPruner(n_startup_trials=N_STARTUP_TRIALS, n_warmup_steps=2)
+        sampler = TPESampler(n_startup_trials=N_STARTUP_TRIALS)
+        study = optuna.create_study(
+            study_name=f"10_07_{experiment.get_identifier_short()}",
+            sampler=sampler,
+            storage="sqlite:///db.sqlite3",
+            pruner=pruner,
+            direction="maximize",
+            load_if_exists=True
+        )
 
-           #env = GiniEnv(grid_size=5, render_mode='console', start="generic_preferences.dzn", experiment=experiment)
-           #train(env)
-           #env.test(iterations=10, filedir=file_dir, start="generic_preferences.dzn", model_name=PPO)
+        try:
+            study.optimize(lambda trial: objective(trial, experiment), n_trials=N_TRIALS, n_jobs=N_JOBS)
+        except KeyboardInterrupt:
+            pass
+
+        print("Number of finished trials:", len(study.trials))
+        print("Best trial value:", study.best_trial.value)
+        print("Best trial params:")
+        for key, value in study.best_trial.params.items():
+            print(f"  {key}: {value}")
+
+        # Rebuild environment
+        env = GiniEnvDQN(render_mode='console', experiment=experiment, experiment_runner=self)
+
+        # Prepare hyperparameters
+        best_params = study.best_trial.params.copy()
+        best_params = {k: v for k, v in best_params.items() if k != "policy"}
+
+        DEFAULT_HYPERPARAMS = {
+            "policy": "MultiInputPolicy",
+        }
+        kwargs = DEFAULT_HYPERPARAMS.copy()
+
+        model_hyper_params_func = {
+            "ppo": ppo_hyper_params,
+            "a2c": a2c_hyper_params,
+            "sac": sac_hyper_params,
+            "dqn": dqn_hyper_params
+        }.get(experiment.model_names.lower())
+        if model_hyper_params_func is not None:
+            kwargs.update(model_hyper_params_func(study.best_trial))
+
+        kwargs = {key: value for key, value in kwargs.items() if key != "policy"}
+
+        model_class = {
+            "ppo": PPO,
+            "a2c": A2C,
+            "sac": SAC,
+            "dqn": DQN
+        }.get(experiment.model_names.lower())
+        if model_class is None:
+            raise ValueError(f"Unknown model name: {experiment.model_names}")
+
+        model_kwargs = dict(verbose=0, **kwargs)
+        model = model_class("MultiInputPolicy", env, **model_kwargs)
+
+        # Use EvalCallback here exactly like in Optuna
+        eval_callback = EvalCallback(
+            env,
+            best_model_save_path=os.path.join(models_dir, f"{experiment.get_identifier_short()}"),
+            log_path=logdir,
+            eval_freq=max(1, int(10000 / 10)),  # or use experiment.iterations if preferred
+            n_eval_episodes=10,
+            deterministic=True,
+            verbose=1,
+        )
+
+        # Final training with consistent callback
+        model.learn(total_timesteps=100, callback=eval_callback, tb_log_name=experiment.get_identifier_short(), progress_bar=True)
+
+        # Load the true best model saved by EvalCallback
+        final_best_model_path = os.path.join(models_dir, f"{experiment.get_identifier_short()}", "best_model.zip")
+        if not os.path.exists(final_best_model_path):
+            # fallback in case no best model was saved
+            print("Warning: No best model found, saving current model instead.")
+            final_best_model_path = os.path.join(models_dir, f"{experiment.get_identifier_short()}_best_model.zip")
+            model.save(final_best_model_path)
+        else:
+            print(f"Final best model saved at: {os.path.abspath(final_best_model_path)}")
+
 
 def create_database(database_name):
     conn = sqlite3.connect(database_name)
@@ -411,39 +609,43 @@ def insert_into_results(database_name, db_result):
 
 
 if __name__ == "__main__":
-    import os 
-    
+    """ import os 
     logging.basicConfig(level=logging.INFO)
 
     if not os.path.isdir(result_dir):
         os.makedirs(result_dir)
 
-    database_name = os.path.join(result_dir, 'det_test.db')
+    database_name = os.path.join(result_dir, '08.db')
     create_database(database_name)
     print(f"Database '{database_name}' created successfully.")
 
-    filename =  os.path.join(os.path.dirname(__file__), 'test_single_configs.json')    
+    filename =  os.path.join(os.path.dirname(__file__), 'test_none_dqn.json')    
     experiments = parse_json(filename)
-    
 
     experiment_runner = ExperimentRunner(database_name)
+    #env = DummyVecEnv([lambda: GiniEnvDQN( render_mode='console', experiment=experiments[0], experiment_runner=ExperimentRunner(database_name)),]) 
     
-    #env = DummyVecEnv([lambda: GiniEnv(grid_size=5, render_mode='console', experiment=experiments[0], experiment_runner=ExperimentRunner(database_name)),]) 
-    
-   # train(env)
-    #print(os.path.join(models_dir, f"{experiments[0].get_identifier_short()}_best_model.zip"))
+    #env.train()   #env = GiniEnvDQN(render_mode='console', experiment=experiments[0], experiment_runner=experiment_runner)
+    #for experiment in experiments:
+     #   print("Running experiment: ", experiment.get_identifier())
+    #test(render_mode='console', experiment=experiments[0], experiment_runner=experiment_runner)
+    experiment_runner.run_all_experiments(experiments)"""
+    import os 
+    logging.basicConfig(level=logging.INFO)
+    if not os.path.isdir(result_dir):
+        os.makedirs(result_dir)
+
+    database_name = os.path.join(result_dir, '01_07.db')
+    create_database(database_name)
+    print(f"Database '{database_name}' created successfully.")
+    filename =  os.path.join(os.path.dirname(__file__), 'test_single_configs.json')    
+    experiments = parse_json(filename)
+    experiment_runner = ExperimentRunner(database_name)
     for experiment in experiments:
-        env = GiniEnv(render_mode='console', experiment=experiment, experiment_runner=experiment_runner)
-        env.test(method="worst_received")
-        env.test(method="greedy")
-        env.test(method="bedarf_received")
-        env.test(method="round_robin")
-        env.test(method="none")
-  
-    #experiment_runner.run_all_experiments(experiments)
+        test(render_mode='console', experiment=experiment, experiment_runner=experiment_runner)
 
 
 
 
 
-    
+

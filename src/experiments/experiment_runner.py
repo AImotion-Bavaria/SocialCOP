@@ -13,6 +13,7 @@ from optuna.pruners import MedianPruner
 from optuna.samplers import TPESampler
 from hyperparam import ppo_hyper_params
 from fairness_models import (
+    test,
     rawls,
     leximin,
     utilitarian,
@@ -63,6 +64,7 @@ if not os.path.exists(logdir):
     os.makedirs(logdir)
 
 configurations_map = {
+      "test": test,  #check
       "rawls" : rawls,  #check
       "leximin": leximin, #check
       "utilitarian" : utilitarian, #check
@@ -282,9 +284,9 @@ class GiniEnv(gym.Env):
         
     
     
-def test(render_mode, experiment, experiment_runner):
+def test(render_mode, experiment, experiment_runners):
         env = DummyVecEnv([lambda: GiniEnv(render_mode='console', experiment=experiment, experiment_runner=experiment_runner)]) 
-        final_model_path = os.path.join(models_dir, f"{experiment.get_identifier()}_best_model.zip")
+        final_model_path = os.path.join(models_dir, f"{experiment.get_identifier()}_best_model_plain.zip")
         model = PPO.load(final_model_path, env=env)
         unique_logdir = os.path.join(logdir, f"{experiment.solver}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}")
         obs = env.reset()
@@ -372,7 +374,7 @@ class ExperimentRunner:
             model.learn(total_timesteps=50)
 
             # Save the final model
-            final_model_path = os.path.join(models_dir, f"{experiment.get_identifier()}_best_model.zip")
+            final_model_path = os.path.join(models_dir, f"{experiment.get_identifier()}_best_model_plain.zip")
             model.save(final_model_path)
 
             print(f"Final trained model saved at: {os.path.abspath(final_model_path)}")
@@ -442,8 +444,8 @@ if __name__ == "__main__":
     
    # train(env)
     #env = GiniEnv(render_mode='console', experiment=experiments[0], experiment_runner=experiment_runner)
-    test(render_mode='console', experiment=experiments[0], experiment_runner=experiment_runner)
-    #experiment_runner.run_all_experiments(experiments)
+    #test(render_mode='console', experiment=experiments[0], experiment_runner=experiment_runner)
+    experiment_runner.run_all_experiments(experiments)
 
 
 

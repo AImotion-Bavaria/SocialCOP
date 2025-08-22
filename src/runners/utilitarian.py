@@ -5,7 +5,7 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 from on_result_runner import OnResultRunner
 
-from util.social_mapping_reader import read_social_mapping, AGENTS_ARRAY, UTILITY_ARRAY, TIME_SPAN, MAIN_VARIABLES
+from util.social_mapping_reader import UTILITY_UPPER_BOUND, read_social_mapping, AGENTS_ARRAY, UTILITY_ARRAY, TIME_SPAN, MAIN_VARIABLES, NUM_AGENTS
 UTILITARIAN_OBJECTIVE = "utilitarian_objective"
 
 def utilitarian_objective(instance : Instance, social_mapper):
@@ -17,8 +17,13 @@ def optimize_utilitarian_objective(instance : Instance, social_mapper = None):
     
 def optimize_utilitarian_objective_weight(instance : Instance, social_mapper = None):
     instance.add_string(f"array[{(social_mapper[AGENTS_ARRAY])}] of int: weights;")
-    instance.add_string(f"var int: total_weight = sum(a in {social_mapper[AGENTS_ARRAY]}) (sum(d in {social_mapper[TIME_SPAN]}) ({social_mapper[MAIN_VARIABLES]}[a,d]) * weights[a]);")
-    instance.add_string(f"solve maximize ({UTILITARIAN_OBJECTIVE} + 1000*total_weight);")
+    instance.add_string(f"var int: {social_mapper[UTILITY_UPPER_BOUND]};")
+    instance.add_string(f"var int: max_weight = {social_mapper[NUM_AGENTS]} * {social_mapper[UTILITY_UPPER_BOUND]}*100;")
+    instance.add_string(f"var int: max_utilitarian = {social_mapper[NUM_AGENTS]} * {social_mapper[UTILITY_UPPER_BOUND]};")
+    instance.add_string(f"var int: total_weight = sum(a in {social_mapper[AGENTS_ARRAY]}) ( {social_mapper[UTILITY_ARRAY]}[a] * weights[a]);")
+    instance.add_string(f"var int: normalized_utilitarian = {UTILITARIAN_OBJECTIVE} * max_weight;")
+    instance.add_string(f"var int: normalized_total_weight = total_weight * max_utilitarian;")
+    instance.add_string(f"solve maximize normalized_utilitarian + normalized_total_weight;")
 
 def get_better_utilitarian(instance : Instance, res : Result, social_mapper = None):
     # enforce that the next solution needs to be better than the current one

@@ -1,0 +1,3 @@
+{
+    "wanted_number_days"  : [ {"set" : [5]}, {"set" : [0]} ]
+}
