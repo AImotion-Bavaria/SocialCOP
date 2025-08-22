@@ -62,7 +62,7 @@ def calculate_gini(array):
     n = array.shape[0]  # Number of array elements
     return ((np.sum((2 * index - n - 1) * array)) / (n * np.sum(array)))  # Gini coefficient
 
-class TrainingEnv(gym.Env):
+class GiniEnv(gym.Env):
     metadata = {'render.modes': ['console']}
 
     def __init__(self, models_dir, file_dir, log_dir, start, grid_size=5, render_mode=None, method="gini_env"):
@@ -80,7 +80,7 @@ class TrainingEnv(gym.Env):
         """
         if not hasattr(self, "index"):
             self.index = 0
-        super(TrainingEnv, self).__init__()
+        super(GiniEnv, self).__init__()
         self.models_dir = models_dir
         self.file_dir = file_dir
         self.logdir = log_dir
@@ -130,7 +130,7 @@ class TrainingEnv(gym.Env):
         else:
             self.frequency = self.start
         self.index += 1
-        self.requirement(self.frequency, count=self.steps)
+        self.bedarf(self.frequency, count=self.steps)
         return self.observation, {}
 
     def step(self, action):
@@ -153,7 +153,7 @@ class TrainingEnv(gym.Env):
         
         self.gini_index = calculate_gini(self.observation["valuation"])
         self.reward = getattr(self, self.method)(action)
-        self.requirement(self.frequency, count=self.steps)
+        self.bedarf(self.frequency, count=self.steps)
         
         self.steps += 1
         terminated = self.steps >= 100
@@ -170,7 +170,7 @@ class TrainingEnv(gym.Env):
         
         return self.observation, self.reward, terminated, truncated, self.info
 
-    def requirement(self, frequency, count, value=30):
+    def bedarf(self, frequency, count, value=30):
         """
         Calculate the required values for each agent based on frequency and count.
 
@@ -179,20 +179,20 @@ class TrainingEnv(gym.Env):
         count (int): Current count.
         value (int): Base value for calculation.
         """
-        requirement = np.zeros(self.grid_size)
+        bedarf = np.zeros(self.grid_size)
         for agent in range(self.grid_size):
             try:
                 if isinstance(frequency[agent], list):
                     count_agent = (count) % len(frequency[agent])
                     with gauss_lock:
-                        requirement[agent] = max(0, gauss(frequency[agent][count_agent], value))
+                        bedarf[agent] = max(0, gauss(frequency[agent][count_agent], value))
                 else:
                     count_agent = (count - 1) % len(frequency)
-                    requirement[agent] = max(0, gauss(frequency[count_agent], value))
+                    bedarf[agent] = max(0, gauss(frequency[count_agent], value))
             except Exception as e:
-                print(f"Error calculating requirement for agent {agent}: {e}")
-                requirement[agent] = 0
-        self.observation["required"] = requirement
+                print(f"Error calculating bedarf for agent {agent}: {e}")
+                bedarf[agent] = 0
+        self.observation["required"] = bedarf
 
     def render(self, mode='console'):
         """
@@ -216,7 +216,7 @@ class TrainingEnv(gym.Env):
     def greedy(self, action):
         return np.clip(self.observation["required"][action], -10000, 10000)
     
-    def requirement_received(self, action):
+    def bedarf_received(self, action):
         if self.observation["received"][action] != 0:
             return np.clip(self.observation["required"][action] / self.observation["received"][action], -10000, 10000)
         else:
@@ -225,11 +225,13 @@ class TrainingEnv(gym.Env):
     def gini_env(self, action):
         return np.clip(-100 * self.gini_index + sum(self.observation["received"]) + sum(self.observation["valuation"]), -10000, 10000)
 
-def test(file_dir, log_dir, models_dir, method, iterations=100, start=[[[2, 2, 2], [3, 3, 1], [1, 1, 4], [1, 2, 3], [1, 1, 5]],
-                    [[5, 5, 5], [3, 3, 1], [1, 1, 4], [1, 3, 2], [1, 1, 5]],
-                    [[5, 1, 3], [3, 5, 1], [2, 4, 1], [2, 3, 4], [2, 4, 1]],
-                    [[5, 3, 1], [1, 5, 2], [3, 2, 2], [2, 3, 1], [5, 5, 1]],
-                    [[3, 5, 4], [2, 1, 4], [1, 1, 5], [2, 5, 1], [1, 1, 3]]], model_name=PPO):
+def test(file_dir, log_dir, models_dir, method, iterations=100, start=[
+        [[2, 2, 2], [3, 3, 1], [1, 1, 4], [1, 2, 3], [1, 1, 5]],
+        [[5, 5, 5], [3, 3, 1], [1, 1, 4], [1, 3, 2], [1, 1, 5]],
+        [[5, 1, 3], [3, 5, 1], [2, 4, 1], [2, 3, 4], [2, 4, 1]],
+        [[5, 3, 1], [1, 5, 2], [3, 2, 2], [2, 3, 1], [5, 5, 1]],
+        [[0, 0, 0], [5, 5, 0], [5, 5, 0], [0, 0, 0], [5, 5, 0]]
+    ], model_name=PPO):
     """
     Test the trained model.
 
@@ -242,7 +244,7 @@ def test(file_dir, log_dir, models_dir, method, iterations=100, start=[[[2, 2, 2
     start (list): Starting values.
     model_name (class): Model class to use for testing.
     """
-    env = DummyVecEnv([lambda: TrainingEnv(grid_size=5, render_mode='console', start=start, method=method, models_dir=models_dir, file_dir=file_dir, log_dir=log_dir)])
+    env = DummyVecEnv([lambda: GiniEnv(grid_size=5, render_mode='console', start=start, method=method, models_dir=models_dir, file_dir=file_dir, log_dir=log_dir)])
     model = PPO.load(file_dir, env=env)
     
     obs = env.reset()
@@ -252,7 +254,7 @@ def test(file_dir, log_dir, models_dir, method, iterations=100, start=[[[2, 2, 2
         obs, reward, done, info = env.step(action)
         print(f' reward:{reward} Predicted action: {action} received: {info[-1]["received"]}, valuation: {info[-1]["valuation"]} value: {info[-1]["value"]}') 
         writer.add_scalar("Test/Reward", reward, step)
-        writer.add_scalar("Test/Gini_Index", calculate_gini(info["valuation"]), step)
+        writer.add_scalar("Test/Gini_Index", calculate_gini(info[-1]["valuation"]), step)
         writer.add_scalar("Test/Sum_rec", info[-1]["sum_rec"], step)
         writer.add_scalar("Test/Valuation", sum(info[-1]["valuation"]), step)
         env.render()
@@ -271,11 +273,13 @@ def train(method, logdir, models_dir, timesteps=1000000):
     models_dir (str): Directory to save models.
     timesteps (int): Number of timesteps to train the model.
     """
-    env = DummyVecEnv([lambda: TrainingEnv(grid_size=5, render_mode='console', start=[[[2, 2, 2], [3, 3, 1], [1, 1, 4], [1, 2, 3], [1, 1, 5]],
-                    [[5, 5, 5], [3, 3, 1], [1, 1, 4], [1, 3, 2], [1, 1, 5]],
-                    [[5, 1, 3], [3, 5, 1], [2, 4, 1], [2, 3, 4], [2, 4, 1]],
-                    [[5, 3, 1], [1, 5, 2], [3, 2, 2], [2, 3, 1], [5, 5, 1]],
-                    [[3, 5, 4], [2, 1, 4], [1, 1, 5], [2, 5, 1], [1, 1, 3]]], method=method)], start_method="fork")
+    env = DummyVecEnv([lambda: GiniEnv(grid_size=5, render_mode='console', start=[
+        [[2, 2, 2], [3, 3, 1], [1, 1, 4], [1, 2, 3], [1, 1, 5]],
+        [[5, 5, 5], [3, 3, 1], [1, 1, 4], [1, 3, 2], [1, 1, 5]],
+        [[5, 1, 3], [3, 5, 1], [2, 4, 1], [2, 3, 4], [2, 4, 1]],
+        [[5, 3, 1], [1, 5, 2], [3, 2, 2], [2, 3, 1], [5, 5, 1]],
+        [[0, 0, 0], [5, 5, 0], [5, 5, 0], [0, 0, 0], [5, 5, 0]]
+    ], method=method)], start_method="fork")
     model = PPO('MultiInputPolicy', env, verbose=1, ent_coef=0.1, tensorboard_log=logdir)
     model.learn(total_timesteps=timesteps, tb_log_name="train_test", callback=TensorboardCallback())
     model.save(models_dir)
@@ -310,11 +314,13 @@ def objective(trial: optuna.Trial, method: str) -> float:
     file_dir = f"src/stable_baselines/agents/models/best_model_{method}.zip"
     logdir = f"src/stable_baselines/logs/{method}"
 
-    env = DummyVecEnv([lambda: TrainingEnv(grid_size=5, render_mode='console', start=[[[2, 2, 2], [3, 3, 1], [1, 1, 4], [1, 2, 3], [1, 1, 5]],
-                    [[5, 5, 5], [3, 3, 1], [1, 1, 4], [1, 3, 2], [1, 1, 5]],
-                    [[5, 1, 3], [3, 5, 1], [2, 4, 1], [2, 3, 4], [2, 4, 1]],
-                    [[5, 3, 1], [1, 5, 2], [3, 2, 2], [2, 3, 1], [5, 5, 1]],
-                    [[3, 5, 4], [2, 1, 4], [1, 1, 5], [2, 5, 1], [1, 1, 3]]], method=method, models_dir=models_dir, file_dir=file_dir, log_dir=logdir)])
+    env = DummyVecEnv([lambda: GiniEnv(grid_size=5, render_mode='console', start=[
+        [[2, 2, 2], [3, 3, 1], [1, 1, 4], [1, 2, 3], [1, 1, 5]],
+        [[5, 5, 5], [3, 3, 1], [1, 1, 4], [1, 3, 2], [1, 1, 5]],
+        [[5, 1, 3], [3, 5, 1], [2, 4, 1], [2, 3, 4], [2, 4, 1]],
+        [[5, 3, 1], [1, 5, 2], [3, 2, 2], [2, 3, 1], [5, 5, 1]],
+        [[0, 0, 0], [5, 5, 0], [5, 5, 0], [0, 0, 0], [5, 5, 0]]
+    ], method=method, models_dir=models_dir, file_dir=file_dir, log_dir=logdir)])
 
     kwargs = DEFAULT_HYPERPARAMS.copy()
     kwargs.update(ppo_hyper_params(trial))
@@ -322,11 +328,13 @@ def objective(trial: optuna.Trial, method: str) -> float:
 
     model = PPO("MultiInputPolicy", env, verbose=0, **kwargs)
 
-    eval_envs = DummyVecEnv([lambda: TrainingEnv(grid_size=5, render_mode='console', start=[[[2, 2, 2], [3, 3, 1], [1, 1, 4], [1, 2, 3], [1, 1, 5]],
-                    [[5, 5, 5], [3, 3, 1], [1, 1, 4], [1, 3, 2], [1, 1, 5]],
-                    [[5, 1, 3], [3, 5, 1], [2, 4, 1], [2, 3, 4], [2, 4, 1]],
-                    [[5, 3, 1], [1, 5, 2], [3, 2, 2], [2, 3, 1], [5, 5, 1]],
-                    [[3, 5, 4], [2, 1, 4], [1, 1, 5], [2, 5, 1], [1, 1, 3]]], method=method, models_dir=models_dir, file_dir=file_dir, log_dir=logdir)])
+    eval_envs = DummyVecEnv([lambda: GiniEnv(grid_size=5, render_mode='console', start=[
+        [[2, 2, 2], [3, 3, 1], [1, 1, 4], [1, 2, 3], [1, 1, 5]],
+        [[5, 5, 5], [3, 3, 1], [1, 1, 4], [1, 3, 2], [1, 1, 5]],
+        [[5, 1, 3], [3, 5, 1], [2, 4, 1], [2, 3, 4], [2, 4, 1]],
+        [[5, 3, 1], [1, 5, 2], [3, 2, 2], [2, 3, 1], [5, 5, 1]],
+        [[0, 0, 0], [5, 5, 0], [5, 5, 0], [0, 0, 0], [5, 5, 0]]
+    ], method=method, models_dir=models_dir, file_dir=file_dir, log_dir=logdir)])
 
     eval_callback = EvalCallback(
         eval_envs,
@@ -382,7 +390,7 @@ def ppo_hyper_params(trial: optuna.Trial) -> dict:
     }
 
 if __name__ == "__main__":
-    methods = ["gini_env", "round_robin", "greedy", "requirement_received", "worst_received"]
+    methods = ["gini_env", "round_robin", "greedy", "bedarf_received", "worst_received"]
 
     for method in methods:
         print(f"Optimizing for method: {method}")
