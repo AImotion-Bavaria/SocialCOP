@@ -1,0 +1,1 @@
+"""CPMpy project-assignment models."""

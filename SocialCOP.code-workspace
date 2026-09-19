@@ -1,0 +1,17 @@
+{
+    "folders": [
+        {
+            "name": "SocialCOP (MiniZinc)",
+            "path": "."
+        },
+        {
+            "name": "SocialCOP (CPMpy)",
+            "path": "SocialCOP-CPMpy"
+        }
+    ],
+    "settings": {
+        "python.analysis.extraPaths": [
+            "${workspaceFolder:SocialCOP (CPMpy)}/src"
+        ]
+    }
+}

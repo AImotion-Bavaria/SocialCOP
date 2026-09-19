@@ -1,0 +1,1 @@
+"""CPMpy photo-placement models."""

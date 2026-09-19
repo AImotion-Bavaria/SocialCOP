@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "socialcop-cpmpy"
+version = "0.1.0"
+description = "CPMpy implementation of SocialCOP"
+requires-python = ">=3.10"
+dependencies = ["cpmpy>=0.9.24"]
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["test"]
+addopts = "-p no:cacheprovider"

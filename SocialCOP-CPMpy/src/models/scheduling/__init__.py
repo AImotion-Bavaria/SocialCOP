@@ -1,0 +1,1 @@
+"""CPMpy scheduling models."""
